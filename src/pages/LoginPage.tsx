@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import axios from 'axios';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -18,29 +19,51 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      console.log('Attempting login with:', { username });
+      console.log('Login attempt with username:', username);
+      console.log('API base URL:', import.meta.env.VITE_API_URL);
+      
       const response = await api.post('/auth/login', { username, password });
-      console.log('Login response:', response.data);
-      
-      const { token, user } = response.data;
-      if (!token || !user) {
-        throw new Error('Invalid response from server');
-      }
-      
-      login(token, user);
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      console.error('Login error:', err);
-      if (err.response) {
-        console.error('Error response:', err.response.data);
-        setError(err.response.data.message || 'Invalid username or password');
-      } else if (err.request) {
-        console.error('No response received:', err.request);
-        setError('Unable to reach the server. Please check your connection.');
+      console.log('Login response received:', { 
+        status: response.status,
+        hasToken: !!response.data.token,
+        hasUser: !!response.data.user,
+        data: response.data
+      });
+
+      if (response.data.token) {
+        console.log('Login successful, setting auth token');
+        login(response.data.token, response.data.user);
+        const from = (location.state as any)?.from?.pathname || '/';
+        navigate(from, { replace: true });
       } else {
-        console.error('Error setting up request:', err.message);
-        setError('An unexpected error occurred. Please try again.');
+        console.error('Login response missing token');
+        setError('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+          config: {
+            url: error.config?.url,
+            baseURL: error.config?.baseURL,
+            headers: error.config?.headers
+          }
+        });
+        if (error.response?.status === 401) {
+          setError('Invalid username or password');
+        } else if (error.response?.data?.message) {
+          setError(error.response.data.message);
+        } else if (!error.response) {
+          setError('No response from server. Please check your connection.');
+        } else {
+          setError('An unexpected error occurred');
+        }
+      } else {
+        console.error('Non-Axios error:', error);
+        setError('An unexpected error occurred');
       }
     } finally {
       setIsLoading(false);

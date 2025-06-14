@@ -32,34 +32,54 @@ export interface ApiError extends Error {
 // Validate and get API base URL
 const getApiBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
+  console.log('Environment variables:', import.meta.env);
+  console.log('VITE_API_URL:', url);
   if (!url) {
     console.warn('VITE_API_URL is not defined, falling back to localhost');
-    return 'http://localhost:5000/api';
+    return 'http://localhost:5000';
   }
   return url;
 };
 
 const API_BASE_URL = getApiBaseUrl();
+console.log('Using API base URL:', API_BASE_URL);
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
   timeout: 10000,
-  withCredentials: false
+  withCredentials: true
 });
 
-// Request interceptor
+// Single request interceptor for authentication and debugging
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Add authentication token
     const token = localStorage.getItem('token');
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Added auth token to request:', {
+        token: token.substring(0, 10) + '...',
+        headers: config.headers
+      });
+    } else {
+      console.warn('No auth token found in localStorage');
     }
-    console.log('Making request to:', config.url, 'with config:', config);
+
+    // Log request details
+    console.log('Making request to:', {
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    });
+
     return config;
   },
   (error: AxiosError) => {
@@ -68,11 +88,11 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Single response interceptor for handling errors and debugging
 api.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse<any> => {
     console.log('Received response:', response.status, response.data);
-    return response as unknown as Response<any>;
+    return response;
   },
   async (error: unknown): Promise<never> => {
     console.error('Response error:', error);
@@ -96,7 +116,9 @@ api.interceptors.response.use(
       
       switch (status) {
         case 401:
+          console.log('Unauthorized access, clearing token and redirecting to login');
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
           window.location.href = '/login';
           break;
         case 403:

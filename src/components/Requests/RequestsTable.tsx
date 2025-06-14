@@ -2,20 +2,20 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRightIcon } from 'lucide-react';
 import { RequestData } from '../../services/requestService';
+import { TableCell, TableRow, Chip, IconButton } from '@mui/material';
+import { Visibility } from '@mui/icons-material';
 
 interface RequestsTableProps {
   requests: RequestData[];
-  onRequestClick?: (requestId: string) => void;
+  onRequestClick?: (requestId: number) => void;
 }
 
 const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick }) => {
   const navigate = useNavigate();
 
-  const handleRequestClick = (requestId: string) => {
+  const handleRequestClick = (requestId: number) => {
     if (onRequestClick) {
       onRequestClick(requestId);
-    } else {
-      navigate(`/requests/${requestId}`);
     }
   };
 
@@ -41,6 +41,18 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Client
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Branch
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Service
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Charges
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Pickup Location
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -50,10 +62,10 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                     Pickup Date
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
+                    Status
                   </th>
                   <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">View</span>
+                    <span className="sr-only">Action</span>
                   </th>
                 </tr>
               </thead>
@@ -66,35 +78,38 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                   </tr>
                 ) : (
                   requests.map((request) => (
-                    <tr
-                      key={request.id}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                      onClick={() => handleRequestClick(request.id.toString())}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {request.pickupLocation}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {request.deliveryLocation}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {new Date(request.pickupDate).toLocaleString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(request.priority || 'medium')}`}>
-                          {request.priority?.charAt(0).toUpperCase() + request.priority?.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <ChevronRightIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                      </td>
-                    </tr>
+                    <TableRow key={request.id}>
+                      <TableCell>{request.userName}</TableCell>
+                      <TableCell>{request.branchName}</TableCell>
+                      <TableCell>{request.serviceTypeName}</TableCell>
+                      <TableCell>{Number(request.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell>{request.pickupLocation}</TableCell>
+                      <TableCell>{request.deliveryLocation}</TableCell>
+                      <TableCell>{new Date(request.pickupDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={request.status}
+                          color={
+                            request.status === 'completed'
+                              ? 'success'
+                              : request.status === 'in_progress'
+                              ? 'warning'
+                              : request.status === 'cancelled'
+                              ? 'error'
+                              : 'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleRequestClick(request.id)}
+                          title="View Details"
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
               </tbody>

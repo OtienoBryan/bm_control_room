@@ -1,8 +1,9 @@
 import React, { Fragment } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
-import { XIcon, HomeIcon, UsersIcon, CogIcon, ShieldIcon, BoxIcon, ImageIcon, InfoIcon } from 'lucide-react';
+import { XIcon, HomeIcon, UsersIcon, CogIcon, ShieldIcon, BoxIcon, ImageIcon, InfoIcon, GroupIcon, Tally4Icon, BellIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { DangerousRounded } from '@mui/icons-material';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -16,30 +17,45 @@ const navigation = [
     icon: HomeIcon
   },
   {
-    name: 'Photo List',
-    href: '/dashboard/photo-list',
+    name: 'Staff List',
+    href: '/dashboard/staff-list',
     icon: ImageIcon
   },
   {
-    name: 'Reports',
-    href: '/dashboard/claims',
-    icon: BoxIcon
+    name: 'Teams List',
+    href: '/dashboard/teams-list',
+    icon: GroupIcon
+  },
+  {
+    name: 'Client List',
+    href: '/dashboard/clients-list',
+    icon: UsersIcon
+  },
+  {
+    name: 'SOS',
+    href: '/dashboard/sos-list',
+    icon: DangerousRounded
+  },
+  {
+    name: 'Runs Reports',
+    href: '/dashboard/daily',
+    icon: Tally4Icon
   },
   {
     name: 'Notice Board',
-    href: '/dashboard/claims',
-    icon: InfoIcon
+    href: '/dashboard/notices',
+    icon: BellIcon
   },
   // {
   //   name: 'Reports',
   //   href: '/dashboard/reports',
   //   icon: BoxIcon
   // },
-  {
-    name: 'Settings',
-    href: '/settings',
-    icon: CogIcon
-  }
+  // {
+  //   name: 'Settings',
+  //   href: '/settings',
+  //   icon: CogIcon
+  // }
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({

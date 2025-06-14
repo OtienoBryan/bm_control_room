@@ -1,19 +1,37 @@
 import api from './api';
 
 export interface RequestData {
-  id?: number;
+  id: number;
   userId: number;
-  userName: string;
   serviceTypeId: number;
+  serviceTypeName: string;
+  userName: string;
+  branchName: string;
+  status: number;
+  myStatus: number;
+  price: number;
+  team_id: number | null;
+  createdAt: string;
+  updatedAt: string;
   pickupLocation: string;
   deliveryLocation: string;
   pickupDate: string;
-  description?: string;
-  priority?: 'low' | 'medium' | 'high';
-  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  myStatus?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  priority: string;
+  branchId: number;
+}
+
+export interface Request {
+  id: string;
+  client_id: string;
+  client_name: string;
+  service_type_id: string;
+  service_type_name: string;
+  pickup_location: string;
+  dropoff_location: string;
+  status: string;
+  latitude: number;
+  longitude: number;
+  // ... other fields
 }
 
 export const requestService = {
@@ -69,7 +87,7 @@ export const requestService = {
     }
   },
 
-  updateRequest: async (requestId: string, data: Partial<RequestData>): Promise<any> => {
+  updateRequest: async (requestId: number, data: Partial<RequestData>): Promise<any> => {
     try {
       console.log('Updating request:', requestId, 'with data:', JSON.stringify(data, null, 2));
       const response = await api.patch<any>(`/requests/${requestId}`, data);
@@ -89,5 +107,40 @@ export const requestService = {
       }
       throw error;
     }
+  },
+
+  getInTransitRequests: async (): Promise<Request[]> => {
+    try {
+      console.log('Fetching in-transit requests...'); // Debug log
+      const response = await api.get<Request[]>('/requests/in-transit');
+      console.log('API Response:', response.data); // Debug log
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getInTransitRequests:', error); // Debug log
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Failed to fetch in-transit requests');
+    }
   }
-}; 
+};
+
+const mapRequestFields = (request: any): RequestData => ({
+  id: request.id,
+  userId: request.user_id,
+  serviceTypeId: request.service_type_id,
+  serviceTypeName: request.service_type_name,
+  userName: request.user_name,
+  branchName: request.branch_name,
+  status: request.status,
+  myStatus: request.my_status,
+  price: request.price,
+  team_id: request.team_id,
+  createdAt: request.created_at,
+  updatedAt: request.updated_at,
+  pickupLocation: request.pickup_location,
+  deliveryLocation: request.delivery_location,
+  pickupDate: request.pickup_date,
+  priority: request.priority,
+  branchId: request.branch_id
+}); 

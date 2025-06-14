@@ -7,7 +7,7 @@ import { Building2, Plus, Pencil, Trash2, Truck } from 'lucide-react';
 import BranchModal from '../components/Clients/BranchModal';
 import ServiceChargeModal from '../components/Clients/ServiceChargeModal';
 
-const ClientDetailPage: React.FC = () => {
+const ClientDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [client, setClient] = useState<Client | null>(null);
@@ -159,38 +159,39 @@ const ClientDetailPage: React.FC = () => {
             Add Branch
           </button>
         </div>
-        
-        <ul className="divide-y divide-gray-200">
-          {branches.map(branch => (
-            <li key={branch.id} className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{branch.name}</p>
-                  <p className="text-sm text-gray-500">{branch.address}</p>
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul className="divide-y divide-gray-200">
+            {branches.map(branch => (
+              <li key={branch.id} className="px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{branch.name}</p>
+                    <p className="text-sm text-gray-500">{branch.address}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEditBranch(branch)}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <Pencil className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBranch(branch.id)}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEditBranch(branch)}
-                    className="text-gray-400 hover:text-gray-500"
-                  >
-                    <Pencil className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteBranch(branch.id)}
-                    className="text-gray-400 hover:text-red-500"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-          {branches.length === 0 && (
-            <li className="px-6 py-4 text-center text-sm text-gray-500">
-              No branches found
-            </li>
-          )}
-        </ul>
+              </li>
+            ))}
+            {branches.length === 0 && (
+              <li className="px-6 py-4 text-center text-sm text-gray-500">
+                No branches found
+              </li>
+            )}
+          </ul>
+        </div>
       </div>
 
       {/* Service Charges Section */}
@@ -255,7 +256,7 @@ const ClientDetailPage: React.FC = () => {
         <BranchModal
           isOpen={isBranchModalOpen}
           onClose={() => setIsBranchModalOpen(false)}
-          clientId={id}
+          clientId={Number(id)}
           branch={selectedBranch}
           onSuccess={(branch) => {
             if (selectedBranch) {
@@ -268,16 +269,13 @@ const ClientDetailPage: React.FC = () => {
         />
       )}
 
-      {/* Service Charge Modal */}
-      {isServiceChargeModalOpen && (
-        <ServiceChargeModal
-          isOpen={isServiceChargeModalOpen}
-          onClose={() => setIsServiceChargeModalOpen(false)}
-          clientId={id}
-          editingCharge={editingServiceCharge}
-          onSuccess={fetchData}
-        />
-      )}
+      <ServiceChargeModal
+        isOpen={isServiceChargeModalOpen}
+        onClose={() => setIsServiceChargeModalOpen(false)}
+        clientId={Number(id)}
+        editingCharge={editingServiceCharge}
+        onSuccess={fetchData}
+      />
 
       <button
         onClick={() => navigate(`/dashboard/clients/${id}/service-requests`)}
@@ -290,4 +288,4 @@ const ClientDetailPage: React.FC = () => {
   );
 };
 
-export default ClientDetailPage;
+export default ClientDetailsPage; 

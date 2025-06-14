@@ -40,13 +40,13 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
           </div>
         </div>
         <div className="ml-4 flex items-center md:ml-6">
-          <button
+          {/* <button
             type="button"
             className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             <span className="sr-only">View notifications</span>
             <BellIcon className="h-6 w-6" aria-hidden="true" />
-          </button>
+          </button> */}
           {/* Profile dropdown */}
           <div className="ml-3 relative">
             <div className="flex items-center">
@@ -54,9 +54,9 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
                 <div className="text-base font-medium text-gray-800">
                   {user?.username}
                 </div>
-                <div className="text-sm font-medium text-gray-500">
+                {/* <div className="text-sm font-medium text-gray-500">
                   {user?.email}
-                </div>
+                </div> */}
               </div>
               <button
                 type="button"
