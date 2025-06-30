@@ -20,18 +20,18 @@ const NoticePage: React.FC = () => {
   }, []);
 
   const fetchNotices = async () => {
-    try {
-      setIsLoading(true);
+      try {
+        setIsLoading(true);
       const data = await noticeService.getNotices();
       setNotices(data);
-      setError(null);
-    } catch (err) {
+        setError(null);
+      } catch (err) {
       console.error('Error fetching notices:', err);
       setError('Failed to load notices. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -81,7 +81,7 @@ const NoticePage: React.FC = () => {
       try {
         await noticeService.deleteNotice(id);
         setNotices(prev => prev.filter(n => n.id !== id));
-      } catch (err) {
+    } catch (err) {
         console.error('Error deleting notice:', err);
         setError('Failed to delete notice');
       }
@@ -136,8 +136,8 @@ const NoticePage: React.FC = () => {
                   content: ''
                 });
               }}
-            >
-              Add Notice
+              >
+                Add Notice
             </Button>
           </div>
           

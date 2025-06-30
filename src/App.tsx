@@ -22,6 +22,7 @@ import InTransitRequests from './pages/InTransitRequests';
 import AddClientPage from './pages/AddClientPage';
 import ClientBranchesPage from './pages/ClientBranchesPage';
 import DailyRuns from './pages/DailyRuns';
+import { SosProvider } from './contexts/SosContext';
 
 // Protected route wrapper
 const ProtectedRoute = () => {
@@ -56,43 +57,45 @@ const DashboardWrapper = () => {
 
 const App = () => {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<LoginRoute />} />
-      
-      {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<DashboardWrapper />}>
-          <Route path="/" element={<UnscheduledRequests />} />
-          <Route path="/dashboard" element={<UnscheduledRequests />} />
-          <Route path="/dashboard/unscheduled" element={<UnscheduledRequests />} />
-          <Route path="/dashboard/pending" element={<PendingRequests />} />
-          <Route path="/dashboard/in-transit" element={<InTransitRequests />} />
-          <Route path="/dashboard/clients/:id" element={<ClientDetailsPage />} />
-          <Route path="/dashboard/photo-list" element={<PhotoListPage />} />
-          <Route path="/dashboard/staff-list" element={<StaffList/>} />
-          <Route path="/dashboard/sos-list" element={<SosList/>} />
-          <Route path="/dashboard/notices" element={<NoticePage/>} />
-          <Route path="/dashboard/daily" element={<DailyRuns/>} />
-          <Route path="/dashboard/teams-list" element={<TeamsList/>} />
-          <Route path="/dashboard/clients-list" element={<ClientsList/>} />
-          <Route path="/dashboard/claims" element={<ClaimsPage />} />
-          <Route path="/dashboard/runs" element={<Runs />} />
-          <Route path="/dashboard/reports" element={<ReportsPage />} />
-          <Route path="/dashboard/clients/add" element={<AddClientPage />} />
-          <Route path="/dashboard/clients/:id/branches" element={<ClientBranchesPage />} />
+    <SosProvider>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginRoute />} />
+        
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardWrapper />}>
+            <Route path="/" element={<UnscheduledRequests />} />
+            <Route path="/dashboard" element={<UnscheduledRequests />} />
+            <Route path="/dashboard/unscheduled" element={<UnscheduledRequests />} />
+            <Route path="/dashboard/pending" element={<PendingRequests />} />
+            <Route path="/dashboard/in-transit" element={<InTransitRequests />} />
+            <Route path="/dashboard/clients/:id" element={<ClientDetailsPage />} />
+            <Route path="/dashboard/photo-list" element={<PhotoListPage />} />
+            <Route path="/dashboard/staff-list" element={<StaffList/>} />
+            <Route path="/dashboard/sos-list" element={<SosList/>} />
+            <Route path="/dashboard/notices" element={<NoticePage/>} />
+            <Route path="/dashboard/daily" element={<DailyRuns/>} />
+            <Route path="/dashboard/teams-list" element={<TeamsList/>} />
+            <Route path="/dashboard/clients-list" element={<ClientsList/>} />
+            <Route path="/dashboard/claims" element={<ClaimsPage />} />
+            <Route path="/dashboard/runs" element={<Runs />} />
+            <Route path="/dashboard/reports" element={<ReportsPage />} />
+            <Route path="/dashboard/clients/add" element={<AddClientPage />} />
+            <Route path="/dashboard/clients/:id/branches" element={<ClientBranchesPage />} />
+          </Route>
+          
+          <Route path="/settings" element={
+            <Layout>
+              <SettingsPage />
+            </Layout>
+          } />
         </Route>
         
-        <Route path="/settings" element={
-          <Layout>
-            <SettingsPage />
-          </Layout>
-        } />
-      </Route>
-      
-      {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </SosProvider>
   );
 };
 

@@ -52,11 +52,20 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
 
     try {
       setIsSubmitting(true);
-      console.log('Updating request with team:', selectedTeamId); // Debug log
+      // Find the selected team and its team leader
+      const selectedTeam = teams.find(t => t.id === selectedTeamId);
+      let staff_id = null;
+      if (selectedTeam) {
+        const teamLeader = selectedTeam.members.find(m => m.role === 'Team Leader');
+        if (teamLeader) {
+          staff_id = teamLeader.id;
+        }
+      }
       await requestService.updateRequest(request.id, {
         team_id: selectedTeamId,
         status: 2, // 2 represents in_progress
-        myStatus: 1 // Update to pending status
+        myStatus: 1, // Update to pending status
+        staff_id // Set the crew commander (team leader)
       });
       onSuccess();
       onClose();

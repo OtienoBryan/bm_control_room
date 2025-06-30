@@ -18,6 +18,7 @@ export interface RequestData {
   pickupDate: string;
   priority: string;
   branchId: number;
+  staff_id?: number;
 }
 
 export interface Request {

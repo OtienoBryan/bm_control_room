@@ -8,6 +8,8 @@ export interface SosData {
   created_at: string;
   staff_id: number;
   guard_name: string;
+  status: 'pending' | 'in_progress' | 'resolved';
+  comment?: string;
 }
 
 export const sosService = {
@@ -29,6 +31,16 @@ export const sosService = {
       } else {
         console.error('Error setting up request:', error.message);
       }
+      throw error;
+    }
+  },
+
+  updateSosStatus: async (sosId: number, status: SosData['status'], comment?: string): Promise<SosData> => {
+    try {
+      const response = await api.patch(`/sos/${sosId}/status`, { status, comment });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating SOS status:', error);
       throw error;
     }
   }

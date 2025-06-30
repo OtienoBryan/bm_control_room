@@ -1,42 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SosData, sosService } from '../../services/sosService';
-import { TableCell, TableRow, Chip, IconButton } from '@mui/material';
+import { TableCell, TableRow, Chip, IconButton, Select, MenuItem, FormControl, Alert } from '@mui/material';
 import { MapPin } from 'lucide-react';
 import LocationModal from '../Requests/LocationModal';
+import { useSos } from '../../contexts/SosContext';
 
 const SosList: React.FC = () => {
-  const [sosList, setSosList] = useState<SosData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { sosList, isLoading, hasActiveSos, error, refreshSosList } = useSos();
   const [selectedSos, setSelectedSos] = useState<SosData | null>(null);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-
-  const fetchSosList = async () => {
-    try {
-      const data = await sosService.getSosList();
-      setSosList(data);
-    } catch (error) {
-      console.error('Error fetching SOS list:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSosList();
-  }, []);
 
   const handleViewLocation = (sos: SosData) => {
     setSelectedSos(sos);
     setIsLocationModalOpen(true);
   };
 
+  const handleStatusChange = async (sosId: number, newStatus: SosData['status']) => {
+    try {
+      console.log(`Updating SOS ${sosId} status to ${newStatus}`);
+      await sosService.updateSosStatus(sosId, newStatus);
+      console.log('Status updated successfully, refreshing list...');
+      await refreshSosList();
+    } catch (error) {
+      console.error('Error updating SOS status:', error);
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-4">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="mt-8">
+          <Alert severity="error">{error}</Alert>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="mt-8">
+        {hasActiveSos && (
+          <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong className="font-bold">Active SOS Alert!</strong>
+            <span className="block sm:inline"> There are active SOS alerts requiring attention.</span>
+          </div>
+        )}
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -57,13 +69,19 @@ const SosList: React.FC = () => {
                     Date & Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Location
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {sosList.map((sos) => (
-                  <TableRow key={sos.id}>
+                  <TableRow 
+                    key={sos.id}
+                    className={sos.status === 'pending' ? 'bg-red-50' : ''}
+                  >
                     <TableCell>
                       <Chip
                         label={sos.sos_type}
@@ -74,6 +92,20 @@ const SosList: React.FC = () => {
                     <TableCell>{sos.guard_name}</TableCell>
                     <TableCell>
                       {new Date(sos.created_at).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" variant="outlined">
+                        <Select
+                          value={sos.status}
+                          onChange={(e) => handleStatusChange(sos.id, e.target.value as SosData['status'])}
+                          size="small"
+                          sx={{ minWidth: 120 }}
+                        >
+                          <MenuItem value="pending">Pending</MenuItem>
+                          <MenuItem value="in_progress">In Progress</MenuItem>
+                          <MenuItem value="resolved">Resolved</MenuItem>
+                        </Select>
+                      </FormControl>
                     </TableCell>
                     <TableCell>
                       <IconButton

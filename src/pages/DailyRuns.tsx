@@ -25,7 +25,9 @@ ChartJS.register(
 interface DateSummary {
   date: string;
   totalRuns: number;
+  totalRunsCompleted: number;
   totalAmount: number;
+  totalAmountCompleted: number;
 }
 
 interface Client {
@@ -287,13 +289,13 @@ const DailyRuns: React.FC = () => {
       {/* Summary Totals */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">Total Runs</h3>
+          <h3 className="text-lg font-medium text-gray-900">Total Runs (All)</h3>
           <p className="mt-2 text-3xl font-semibold text-gray-900">
-            {dateSummaries.reduce((sum, summary) => sum + summary.totalRuns, 0)}
+            {dateSummaries.reduce((sum, summary) => sum + Number(summary.totalRuns || 0), 0)}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900">Total Amount</h3>
+          <h3 className="text-lg font-medium text-gray-900">Total Amount (All Runs)</h3>
           <p className="mt-2 text-3xl font-semibold text-gray-900">
             {dateSummaries.reduce((sum, summary) => sum + Number(summary.totalAmount || 0), 0).toFixed(2)}
           </p>

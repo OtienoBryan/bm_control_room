@@ -12,7 +12,8 @@ interface Team {
   created_at: string;
 }
 
-const REQUIRED_ROLES = ['Team Leader', 'Driver', 'Cash Officer', 'Police'];
+const REQUIRED_ROLES = ['Team Leader', 'Driver'];
+const OPTIONAL_ROLES = ['Cash Officer', 'Police'];
 
 const StaffList: React.FC = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -225,39 +226,28 @@ const StaffList: React.FC = () => {
         return acc;
       }, {} as Record<string, Staff[]>);
 
-      // Check if we have enough staff for each required role
-      const missingRoles = REQUIRED_ROLES.filter(role => 
-        !staffByRole[role] || staffByRole[role].length === 0
-      );
-
-      if (missingRoles.length > 0) {
-        setError(`Missing staff for roles: ${missingRoles.join(', ')}`);
-        return;
-      }
-
-      // Shuffle staff within each role
-      Object.keys(staffByRole).forEach(role => {
-        staffByRole[role] = shuffleArray(staffByRole[role]);
-      });
-
-      // Create teams ensuring each has the required roles
+      // Create teams ensuring each has the required roles, and add optional roles if available
       const teams: Staff[][] = [];
       let teamIndex = 0;
       let canCreateMoreTeams = true;
 
       while (canCreateMoreTeams) {
         const team: Staff[] = [];
-        
-        // Try to add one staff member from each required role
+        // Add required roles
         for (const role of REQUIRED_ROLES) {
-          if (staffByRole[role].length > teamIndex) {
+          if (staffByRole[role] && staffByRole[role].length > teamIndex) {
             team.push(staffByRole[role][teamIndex]);
           } else {
             canCreateMoreTeams = false;
             break;
           }
         }
-
+        // Add optional roles if available
+        for (const role of OPTIONAL_ROLES) {
+          if (staffByRole[role] && staffByRole[role].length > teamIndex) {
+            team.push(staffByRole[role][teamIndex]);
+          }
+        }
         if (canCreateMoreTeams) {
           teams.push(team);
           teamIndex++;
