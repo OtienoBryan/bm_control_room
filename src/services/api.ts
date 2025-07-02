@@ -32,14 +32,11 @@ export interface ApiError extends Error {
 // Validate and get API base URL
 const getApiBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
-  console.log('Environment variables:', import.meta.env);
-  console.log('VITE_API_URL:', url);
+  console.log('API base URL:', url);
   if (!url) {
-    console.warn('VITE_API_URL is not defined, falling back to default URL');
-    return 'https://vaultserver.vercel.app/api';
+    console.warn('VITE_API_URL is not defined, falling back to localhost');
+    return 'http://localhost:5000/api';
   }
-  return url;
-};
   
   // Ensure URL ends with /api
   if (!url.endsWith('api')) {
