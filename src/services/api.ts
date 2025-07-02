@@ -32,13 +32,12 @@ export interface ApiError extends Error {
 // Validate and get API base URL
 const getApiBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
-  console.log('Environment variables:', import.meta.env);
-  console.log('VITE_API_URL:', url);
+  console.log('API base URL:', url);
   if (!url) {
     console.warn('VITE_API_URL is not defined, falling back to localhost');
-    return 'http://localhost:5000';
+    return 'http://localhost:5000/api';
   }
-  return url;
+  return `${url}/api`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -48,11 +47,7 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Access-Control-Allow-Origin': 'https://bm-control-room.vercel.app',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true'
+    'Accept': 'application/json'
   },
   timeout: 10000,
   withCredentials: true
