@@ -37,7 +37,12 @@ const getApiBaseUrl = (): string => {
     console.warn('VITE_API_URL is not defined, falling back to localhost');
     return 'http://localhost:5000/api';
   }
-  return url; // Remove /api suffix since it might not be needed for the new endpoint
+  
+  // Ensure URL ends with /api
+  if (!url.endsWith('/api')) {
+    return url + '/api';
+  }
+  return url;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -50,7 +55,7 @@ export const api = axios.create({
     'Accept': 'application/json'
   },
   timeout: 15000,
-  withCredentials: true // Enable credentials for CORS
+  withCredentials: false // Disable credentials for CORS
 });
 
 // Single request interceptor for authentication and debugging
