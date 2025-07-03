@@ -39,8 +39,8 @@ const getApiBaseUrl = (): string => {
   }
   
   // Ensure URL ends with /api
-  if (!url.endsWith('api')) {
-    return url + 'api';
+  if (!url.endsWith('/api')) {
+    return url + '/api';
   }
   return url;
 };
