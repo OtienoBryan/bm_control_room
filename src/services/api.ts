@@ -32,11 +32,15 @@ export interface ApiError extends Error {
 // Validate and get API base URL
 const getApiBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
-  console.log('Environment variables:', import.meta.env);
-  console.log('VITE_API_URL:', url);
+  console.log('API base URL:', url);
   if (!url) {
     console.warn('VITE_API_URL is not defined, falling back to localhost');
-    return 'http://localhost:5000';
+    return 'http://localhost:5000/api';
+  }
+  
+  // Ensure URL ends with /api
+  if (!url.endsWith('/api')) {
+    return url + '/api';
   }
   return url;
 };
@@ -50,8 +54,8 @@ export const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 10000,
-  withCredentials: true
+  timeout: 15000,
+  withCredentials: false // Disable credentials for CORS
 });
 
 // Single request interceptor for authentication and debugging
