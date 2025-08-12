@@ -51,11 +51,11 @@ const navigation = [
   //   href: '/dashboard/reports',
   //   icon: BoxIcon
   // },
-  // {
-  //   name: 'Settings',
-  //   href: '/settings',
-  //   icon: CogIcon
-  // }
+  {
+    name: 'Settings',
+    href: '/settings',
+    icon: CogIcon
+  }
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const logoSection = (
     <div className="flex items-center h-16 flex-shrink-0 px-4 bg-white">
       {/* <img src="/bm.jpeg" alt="Logo" className="h-8 w-auto" /> */}
-      <h1 className="text-2xl font-bold text-red-800">BM SECURITY</h1>
+      <h1 className="text-2xl font-bold text-red-800">BM Security</h1>
     </div>
   );
 

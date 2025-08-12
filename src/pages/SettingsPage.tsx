@@ -1,6 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BellIcon, UserIcon, LockIcon, GlobeIcon, PaletteIcon } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/authService';
+
 const SettingsPage: React.FC = () => {
+  const { user, login } = useAuth();
+  const [username, setUsername] = useState(user?.username || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState('');
+  const [pwError, setPwError] = useState('');
+
+  const handleSave = async () => {
+    setLoading(true);
+    setSuccess('');
+    setError('');
+    try {
+      const updated = await authService.updateUser(String(user!.id), { username, email });
+      setSuccess('Profile updated successfully');
+      login(localStorage.getItem('token') || '', updated); // update context
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPwLoading(true);
+    setPwSuccess('');
+    setPwError('');
+    if (newPassword !== confirmPassword) {
+      setPwError('New passwords do not match');
+      setPwLoading(false);
+      return;
+    }
+    try {
+      await authService.changePassword(String(user!.id), oldPassword, newPassword);
+      setPwSuccess('Password changed successfully');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setPwError(err?.response?.data?.message || 'Failed to change password');
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
   return <div className="px-4 sm:px-6 lg:px-8">
       <div className="pb-5 border-b border-gray-200">
         <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -28,14 +81,21 @@ const SettingsPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Name
                   </label>
-                  <input type="text" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="Your name" />
+                  <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="Your name" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Email
                   </label>
-                  <input type="email" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="you@example.com" />
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="you@example.com" />
                 </div>
+              </div>
+              <div className="mt-4 flex items-center gap-4">
+                <button onClick={handleSave} disabled={loading} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
+                  {loading ? 'Saving...' : 'Save'}
+                </button>
+                {success && <span className="text-green-600 text-sm">{success}</span>}
+                {error && <span className="text-red-600 text-sm">{error}</span>}
               </div>
             </div>
           </div>
@@ -51,9 +111,42 @@ const SettingsPage: React.FC = () => {
             </div>
             <div className="px-4 py-5 sm:p-6">
               <div className="space-y-4">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700">
-                  Change Password
-                </button>
+                {/* Password Change Form */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <input
+                    type="password"
+                    value={oldPassword}
+                    onChange={e => setOldPassword(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                    placeholder="Old password"
+                  />
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                    placeholder="New password"
+                  />
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={pwLoading}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {pwLoading ? 'Changing...' : 'Change Password'}
+                  </button>
+                  {pwSuccess && <span className="text-green-600 text-sm">{pwSuccess}</span>}
+                  {pwError && <span className="text-red-600 text-sm">{pwError}</span>}
+                </div>
+                {/* End Password Change Form */}
                 <div>
                   <label className="flex items-center">
                     <input type="checkbox" className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded" />
@@ -66,7 +159,7 @@ const SettingsPage: React.FC = () => {
             </div>
           </div>
           {/* Notifications */}
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-white shadow rounded-lg" hidden>
             <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
               <div className="flex items-center">
                 <BellIcon className="h-5 w-5 text-gray-400 mr-2" />
@@ -91,7 +184,7 @@ const SettingsPage: React.FC = () => {
             </div>
           </div>
           {/* Display Settings */}
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-white shadow rounded-lg" hidden>
             <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
               <div className="flex items-center">
                 <PaletteIcon className="h-5 w-5 text-gray-400 mr-2" />

@@ -47,5 +47,15 @@ export const authService = {
     }
     const response = await api.post<AuthResponse>('/auth/refresh', { token });
     return response.data;
+  },
+
+  updateUser: async (userId: string, data: { username?: string; email?: string }): Promise<any> => {
+    const response = await api.patch(`/users/${userId}`, data);
+    return response.data;
+  },
+
+  changePassword: async (userId: string, oldPassword: string, newPassword: string): Promise<any> => {
+    const response = await api.patch(`/users/${userId}/password`, { oldPassword, newPassword });
+    return response.data;
   }
 };
