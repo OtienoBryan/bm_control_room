@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { clientService, Client } from '../services/clientService';
 import { Branch, getBranches, deleteBranch } from '../services/branchService';
-import serviceChargeService from '../services/serviceChargeService';
+import serviceChargeService, { ServiceCharge } from '../services/serviceChargeService';
 import { 
   Building2, 
   Plus, 
@@ -328,7 +328,7 @@ const ClientDetailsPage: React.FC = () => {
             <nav className="-mb-px flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors {
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'overview'
                     ? 'border-red-500 text-red-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -338,7 +338,7 @@ const ClientDetailsPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('branches')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors {
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'branches'
                     ? 'border-red-500 text-red-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -348,7 +348,7 @@ const ClientDetailsPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('service-charges')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors {
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'service-charges'
                     ? 'border-red-500 text-red-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -389,7 +389,7 @@ const ClientDetailsPage: React.FC = () => {
                         <span className="text-sm text-gray-500">{totalServiceCharges} charges</span>
                       </button>
                       <button
-                        onClick={() => navigate(`/dashboard/clients/{id}/service-requests`)}
+                        onClick={() => navigate(`/dashboard/clients/${id}/service-requests`)}
                         className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-red-300 hover:shadow-sm transition-all"
                       >
                         <div className="flex items-center">
@@ -549,7 +549,7 @@ const ClientDetailsPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-gray-900 font-mono">
-                                {Number(charge.price).toFixed(2)}
+                                ${Number(charge.price).toFixed(2)}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
