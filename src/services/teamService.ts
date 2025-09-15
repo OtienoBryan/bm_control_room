@@ -5,12 +5,22 @@ export interface Team {
   id: number;
   name: string;
   members: Staff[];
+  vehicles: Vehicle[];
   created_at: string;
+}
+
+export interface Vehicle {
+  id: number;
+  registration_number: string;
+  model_name: string;
+  consumption: number;
+  status: number;
 }
 
 export interface CreateTeamData {
   name: string;
   members: number[];
+  vehicles?: number[];
 }
 
 export const teamService = {
@@ -32,6 +42,16 @@ export const teamService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching teams:', error);
+      throw error;
+    }
+  },
+
+  checkTeamsForToday: async (): Promise<{ hasTeamsToday: boolean; teamCount: number }> => {
+    try {
+      const response = await api.get('/teams/check-today');
+      return response.data;
+    } catch (error) {
+      console.error('Error checking teams for today:', error);
       throw error;
     }
   }

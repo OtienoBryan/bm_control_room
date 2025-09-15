@@ -227,11 +227,15 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
                             disabled={isLoading}
                           >
                             <option value="">Choose a team</option>
-                            {teams.map((team) => (
-                              <option key={team.id} value={team.id}>
-                                {team.name} - {team.members.length} members
-                              </option>
-                            ))}
+                            {teams.map((team) => {
+                              const teamLeader = team.members.find(m => m.role === 'Team Leader');
+                              const teamLeaderName = teamLeader ? teamLeader.name : 'No Team Leader';
+                              return (
+                                <option key={team.id} value={team.id}>
+                                  {team.name} - {teamLeaderName} ({team.members.length} members)
+                                </option>
+                              );
+                            })}
                           </select>
                         </div>
 

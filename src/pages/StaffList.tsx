@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Staff, staffService, CreateStaffData } from '../services/staffService';
 import { Role, roleService } from '../services/roleService';
+import { Vehicle, vehicleService } from '../services/vehicleService';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { teamService } from '../services/teamService';
@@ -9,6 +10,7 @@ interface Team {
   id: number;
   name: string;
   members: Staff[];
+  vehicles: Vehicle[];
   created_at: string;
 }
 
@@ -17,6 +19,7 @@ const OPTIONAL_ROLES = ['Cash Officer', 'Police'];
 
 const StaffList: React.FC = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +38,7 @@ const StaffList: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [isShufflerModalOpen, setIsShufflerModalOpen] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [selectedStaff, setSelectedStaff] = useState<Staff[]>([]);
   const [teamSize, setTeamSize] = useState(4);
@@ -42,6 +46,10 @@ const StaffList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [shuffledTeams, setShuffledTeams] = useState<Staff[][]>([]);
+  const [shuffledTeamVehicles, setShuffledTeamVehicles] = useState<Vehicle[][]>([]);
+  const [hasTeamsToday, setHasTeamsToday] = useState(false);
+  const [isCheckingTeams, setIsCheckingTeams] = useState(false);
 
   // Get current date in format: DD MMMM YYYY
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -67,16 +75,19 @@ const StaffList: React.FC = () => {
         setIsLoading(true);
         console.log('Fetching staff and roles data...');
         
-        const [staffData, rolesData] = await Promise.all([
+        const [staffData, rolesData, vehiclesData] = await Promise.all([
           staffService.getStaffList(),
-          roleService.getRoles()
+          roleService.getRoles(),
+          vehicleService.getVehicles()
         ]);
         
         console.log('Staff data:', staffData);
         console.log('Roles data:', rolesData);
+        console.log('Vehicles data:', vehiclesData);
         
         setStaff(staffData);
         setRoles(rolesData);
+        setVehicles(vehiclesData);
         setError(null);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -96,6 +107,26 @@ const StaffList: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Check for existing teams when component loads
+  useEffect(() => {
+    checkTeamsForToday();
+  }, []);
+
+  const checkTeamsForToday = async () => {
+    try {
+      setIsCheckingTeams(true);
+      const result = await teamService.checkTeamsForToday();
+      setHasTeamsToday(result.hasTeamsToday);
+      return result.hasTeamsToday;
+    } catch (err) {
+      console.error('Error checking teams for today:', err);
+      setError('Failed to check existing teams');
+      return false;
+    } finally {
+      setIsCheckingTeams(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -224,6 +255,116 @@ const StaffList: React.FC = () => {
     return shuffled;
   };
 
+  const handleShuffleTeams = async () => {
+    try {
+      // Check if teams already exist for today
+      const teamsExistToday = await checkTeamsForToday();
+      
+      if (teamsExistToday) {
+        setError('Teams have already been created for today. You can only create teams once per day.');
+        return;
+      }
+
+      // Get active staff only
+      const activeStaff = staff.filter(s => s.status === 1);
+      
+      // Get active vehicles only
+      const activeVehicles = vehicles.filter(v => v.status === 1);
+      
+      if (activeVehicles.length < 2) {
+        setError('Not enough active vehicles. At least 2 vehicles are required to create teams.');
+        return;
+      }
+      
+      // Group staff by role
+      const staffByRole = activeStaff.reduce((acc, member) => {
+        if (!acc[member.role]) {
+          acc[member.role] = [];
+        }
+        acc[member.role].push(member);
+        return acc;
+      }, {} as Record<string, Staff[]>);
+
+      // Shuffle each role group
+      Object.keys(staffByRole).forEach(role => {
+        staffByRole[role] = shuffleArray(staffByRole[role]);
+      });
+
+      // Shuffle vehicles
+      const shuffledVehicles = shuffleArray([...activeVehicles]);
+
+      // Create teams with required composition: 1 Team Leader, 2 Drivers, 2 Police
+      const teams: Staff[][] = [];
+      const teamVehicles: Vehicle[][] = [];
+      const teamLeaders = staffByRole['Team Leader'] || [];
+      const drivers = staffByRole['Driver'] || [];
+      const police = staffByRole['Police'] || [];
+
+      // Calculate maximum number of teams we can create
+      const maxTeams = Math.min(
+        teamLeaders.length,
+        Math.floor(drivers.length / 2),
+        Math.floor(police.length / 2),
+        Math.floor(shuffledVehicles.length / 2) // Each team needs 2 vehicles
+      );
+
+      for (let i = 0; i < maxTeams; i++) {
+        const team: Staff[] = [];
+        const vehicles: Vehicle[] = [];
+        
+        // Add 1 Team Leader
+        if (teamLeaders[i]) {
+          team.push(teamLeaders[i]);
+        }
+        
+        // Add 2 Drivers
+        if (drivers[i * 2]) team.push(drivers[i * 2]);
+        if (drivers[i * 2 + 1]) team.push(drivers[i * 2 + 1]);
+        
+        // Add 2 Police
+        if (police[i * 2]) team.push(police[i * 2]);
+        if (police[i * 2 + 1]) team.push(police[i * 2 + 1]);
+        
+        // Add 2 Vehicles
+        if (shuffledVehicles[i * 2]) vehicles.push(shuffledVehicles[i * 2]);
+        if (shuffledVehicles[i * 2 + 1]) vehicles.push(shuffledVehicles[i * 2 + 1]);
+        
+        if (team.length > 0) {
+          teams.push(team);
+          teamVehicles.push(vehicles);
+        }
+      }
+
+      if (teams.length === 0) {
+        setError('Not enough active staff with the required roles to create teams.');
+        return;
+      }
+
+      // Save teams to database with vehicles
+      for (let i = 0; i < teams.length; i++) {
+        const team = teams[i];
+        const teamName = `Team ${i + 1} - ${new Date().toLocaleDateString()}`;
+        
+        // Assign 2 vehicles to each team
+        const teamVehicleIds = teamVehicles[i].map(vehicle => vehicle.id);
+        
+        await teamService.createTeam({
+          name: teamName,
+          members: team.map(member => member.id),
+          vehicles: teamVehicleIds
+        });
+      }
+
+      setShuffledTeams(teams);
+      setShuffledTeamVehicles(teamVehicles);
+      setIsShufflerModalOpen(true);
+      setError(null); // Clear any previous errors
+    } catch (err) {
+      console.error('Error shuffling teams:', err);
+      setError('Failed to create teams. Please try again.');
+    }
+  };
+
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -338,6 +479,39 @@ const StaffList: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   Create Teams
+                </button>
+                <button
+                  onClick={handleShuffleTeams}
+                  disabled={isCheckingTeams || hasTeamsToday}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-colors ${
+                    isCheckingTeams || hasTeamsToday
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : 'text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500'
+                  }`}
+                >
+                  {isCheckingTeams ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Checking...
+                    </>
+                  ) : hasTeamsToday ? (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Teams Created Today
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Shuffle Teams
+                    </>
+                  )}
                 </button>
                 <a
                   href="/dashboard/photo-list"
@@ -992,6 +1166,197 @@ const StaffList: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Shuffler Modal */}
+      {isShufflerModalOpen && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full mx-4 transform transition-all max-h-[90vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">Shuffled Teams</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Automatically shuffled teams with 1 Team Leader, 2 Drivers, 2 Police, and 2 Vehicles
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsShufflerModalOpen(false);
+                    setShuffledTeams([]);
+                    setShuffledTeamVehicles([]);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="px-6 py-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {shuffledTeams.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No teams can be created</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Not enough active staff with the required roles (Team Leader, Driver, Police)
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {shuffledTeams.map((team, teamIndex) => (
+                    <div key={teamIndex} className="bg-gray-50 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-gray-900">Team {teamIndex + 1}</h4>
+                        <div className="flex space-x-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {team.length} members
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            {shuffledTeamVehicles[teamIndex]?.length || 0} vehicles
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-white">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Role
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Employee #
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ID #
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {team.map((member) => (
+                              <tr key={member.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div className="flex-shrink-0 h-8 w-8">
+                                      {member.photo_url ? (
+                                        <img className="h-8 w-8 rounded-full object-cover" src={member.photo_url} alt={member.name} />
+                                      ) : (
+                                        <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                          <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                          </svg>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="ml-3">
+                                      <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap">
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    member.role === 'Team Leader' ? 'bg-purple-100 text-purple-800' :
+                                    member.role === 'Driver' ? 'bg-blue-100 text-blue-800' :
+                                    member.role === 'Police' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {member.role}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {member.empl_no}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {member.id_no}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {/* Vehicles Section */}
+                      {shuffledTeamVehicles[teamIndex] && shuffledTeamVehicles[teamIndex].length > 0 && (
+                        <div className="mt-4">
+                          <h5 className="text-sm font-medium text-gray-900 mb-3">Assigned Vehicles</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {shuffledTeamVehicles[teamIndex].map((vehicle, vehicleIndex) => (
+                              <div key={vehicleIndex} className="bg-white rounded-lg p-3 border border-gray-200">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {vehicle.registration_number}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {vehicle.model_name}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-xs text-gray-500">
+                                      {vehicle.consumption} Km/L
+                                    </div>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      vehicle.status === 1 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-red-100 text-red-800'
+                                    }`}>
+                                      {vehicle.status === 1 ? 'Active' : 'Inactive'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-500">
+                  {shuffledTeams.length > 0 && (
+                    <span>
+                      {shuffledTeams.length} team{shuffledTeams.length !== 1 ? 's' : ''} created with shuffled staff
+                    </span>
+                  )}
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleShuffleTeams}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-orange-700 bg-orange-100 hover:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Shuffle Again
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsShufflerModalOpen(false);
+                      setShuffledTeams([]);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
