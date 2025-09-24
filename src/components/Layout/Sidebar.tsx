@@ -43,6 +43,13 @@ const TruckIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const CarIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+  </svg>
+);
+
 const RouteIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7" />
@@ -111,6 +118,12 @@ const navigation: NavigationSection[] = [
         href: '/dashboard/teams-list',
         icon: GroupIcon,
         description: 'Team management'
+      },
+      {
+        name: 'Vehicle Management',
+        href: '/dashboard/vehicle-management',
+        icon: CarIcon,
+        description: 'Fleet management'
       },
       {
         name: 'Client List',
@@ -187,13 +200,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const logoSection = (
-    <div className="flex items-center h-16 flex-shrink-0 px-6 bg-gradient-to-r from-red-950 to-red-700">
+    <div className="flex items-center h-16 flex-shrink-0 px-6 bg-gradient-to-r from-blue-950 to-yellow-700">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
           <ShieldIcon className="h-6 w-6 text-red-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">BM Security</h1>
+          <h1 className="text-xl font-bold text-white">Wells Fargo</h1>
           <p className="text-xs text-red-100">Logistics Management</p>
         </div>
       </div>

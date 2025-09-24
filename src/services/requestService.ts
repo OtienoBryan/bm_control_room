@@ -7,6 +7,7 @@ export interface RequestData {
   serviceTypeName: string;
   userName: string;
   branchName: string;
+  clientName: string;
   status: number;
   myStatus: number;
   price: number;
@@ -133,6 +134,7 @@ const mapRequestFields = (request: any): RequestData => ({
   serviceTypeName: request.service_type_name,
   userName: request.user_name,
   branchName: request.branch_name,
+  clientName: request.client_name,
   status: request.status,
   myStatus: request.my_status,
   price: request.price,

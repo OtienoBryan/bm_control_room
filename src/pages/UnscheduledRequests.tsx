@@ -22,9 +22,9 @@ const UnscheduledRequestsPage: React.FC = () => {
   const [isAssignTeamModalOpen, setIsAssignTeamModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestData | null>(null);
   const [requests, setRequests] = useState<RequestData[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<RequestData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterBranch, setFilterBranch] = useState<string>('all');
   const [stats, setStats] = useState({
     total: 0,
@@ -33,27 +33,34 @@ const UnscheduledRequestsPage: React.FC = () => {
     completed: 0
   });
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedCard, setSelectedCard] = useState<string>('all');
   const { user } = useAuth();
 
   const fetchRequests = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available');
+      return;
+    }
     
     try {
       setIsLoading(true);
-      // Fetch requests with myStatus = 0 (unscheduled)
-      const data = await requestService.getRequests({ myStatus: 0 });
-      // Filter requests to only show those belonging to the current user
-      const userRequests = data.filter(request => request.userId === user.id);
-      setRequests(userRequests);
       
-              // Calculate statistics based on status
-        const pending = userRequests.filter(r => r.status === 0).length;
-        const inProgress = userRequests.filter(r => r.status === 1).length;
-        const completed = userRequests.filter(r => r.status === 2).length;
+      // Fetch unscheduled requests (myStatus = 0) for the main table
+      const unscheduledData = await requestService.getRequests({ myStatus: 0 });
+      
+      // Filter requests to only show those belonging to the current user
+      const userUnscheduledRequests = unscheduledData.filter(request => request.userId === user.id);
+      
+      setRequests(userUnscheduledRequests);
+      
+      // Calculate statistics for unscheduled requests only
+      const inProgress = userUnscheduledRequests.filter(r => r.status === 1).length;
+      const completed = userUnscheduledRequests.filter(r => r.status === 2).length;
+      
       
       setStats({
-        total: userRequests.length,
-        pending,
+        total: userUnscheduledRequests.length,
+        pending: 0, // This will be updated by fetchPendingCount
         inProgress,
         completed
       });
@@ -64,12 +71,40 @@ const UnscheduledRequestsPage: React.FC = () => {
     }
   };
 
+  const fetchPendingCount = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // Fetch only pending requests (myStatus = 1) for the pending card
+      const pendingData = await requestService.getRequests({ myStatus: 1 });
+      
+      // Filter requests to only show those belonging to the current user
+      const userPendingRequests = pendingData.filter(request => request.userId === user.id);
+      
+      // Store pending requests for display
+      setPendingRequests(userPendingRequests);
+      
+      // Update only the pending count in stats
+      setStats(prevStats => ({
+        ...prevStats,
+        pending: userPendingRequests.length
+      }));
+    } catch (error) {
+      console.error('Error fetching pending count:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchPendingCount();
   }, [user?.id]);
 
   const handleSuccess = () => {
     fetchRequests();
+    fetchPendingCount();
+    // Reset to all view when refreshing
+    setSelectedCard('all');
+    setStatusFilter('all');
   };
 
   const handleRequestClick = (request: RequestData) => {
@@ -88,46 +123,32 @@ const UnscheduledRequestsPage: React.FC = () => {
     }
   };
 
+  // Get the current dataset based on selected card
+  const getCurrentDataset = () => {
+    switch (selectedCard) {
+      case 'pending':
+        return pendingRequests;
+      case 'all':
+      default:
+        return requests;
+    }
+  };
+
   // Filter functions
-  const filteredRequests = requests.filter(request => {
-    const matchesSearch = 
-      request.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredRequests = getCurrentDataset().filter(request => {
+    // If search term is empty, match all requests
+    const matchesSearch = searchTerm === '' || 
       request.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.deliveryLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.pickupLocation?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesPriority = filterPriority === 'all' || request.priority === filterPriority;
     const matchesBranch = filterBranch === 'all' || request.branchName === filterBranch;
     const matchesStatus = statusFilter === 'all' || getStatusLabel(request.status) === statusFilter;
     
-    return matchesSearch && matchesPriority && matchesBranch && matchesStatus;
+    return matchesSearch && matchesBranch && matchesStatus;
   });
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return <AlertCircleIcon size={16} className="text-red-600" />;
-      case 'medium':
-        return <ClockIcon size={16} className="text-yellow-600" />;
-      case 'low':
-        return <AlertCircleIcon size={16} className="text-green-600" />;
-      default:
-        return <AlertCircleIcon size={16} className="text-gray-600" />;
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-KE', {
@@ -190,9 +211,12 @@ const UnscheduledRequestsPage: React.FC = () => {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div 
-            onClick={() => setStatusFilter('all')}
+            onClick={() => {
+              setSelectedCard('all');
+              setStatusFilter('all');
+            }}
             className={`bg-white rounded-lg shadow-sm border cursor-pointer transition-all hover:shadow-md ${
-              statusFilter === 'all' 
+              selectedCard === 'all' 
                 ? 'border-blue-300 bg-blue-50' 
                 : 'border-gray-200 hover:border-gray-300'
             }`}
@@ -217,9 +241,12 @@ const UnscheduledRequestsPage: React.FC = () => {
           </div>
           
           <div 
-            onClick={() => setStatusFilter('pending')}
+            onClick={() => {
+              setSelectedCard('pending');
+              setStatusFilter('all');
+            }}
             className={`bg-white rounded-lg shadow-sm border cursor-pointer transition-all hover:shadow-md ${
-              statusFilter === 'pending' 
+              selectedCard === 'pending' 
                 ? 'border-yellow-300 bg-yellow-50' 
                 : 'border-gray-200 hover:border-gray-300'
             }`}
@@ -244,9 +271,12 @@ const UnscheduledRequestsPage: React.FC = () => {
           </div>
           
           <div 
-            onClick={() => setStatusFilter('in_progress')}
+            onClick={() => {
+              setSelectedCard('all');
+              setStatusFilter('in_progress');
+            }}
             className={`bg-white rounded-lg shadow-sm border cursor-pointer transition-all hover:shadow-md ${
-              statusFilter === 'in_progress' 
+              selectedCard === 'all' && statusFilter === 'in_progress'
                 ? 'border-blue-300 bg-blue-50' 
                 : 'border-gray-200 hover:border-gray-300'
             }`}
@@ -271,9 +301,12 @@ const UnscheduledRequestsPage: React.FC = () => {
           </div>
           
           <div 
-            onClick={() => setStatusFilter('completed')}
+            onClick={() => {
+              setSelectedCard('all');
+              setStatusFilter('completed');
+            }}
             className={`bg-white rounded-lg shadow-sm border cursor-pointer transition-all hover:shadow-md ${
-              statusFilter === 'completed' 
+              selectedCard === 'all' && statusFilter === 'completed'
                 ? 'border-green-300 bg-green-50' 
                 : 'border-gray-200 hover:border-gray-300'
             }`}
@@ -313,17 +346,6 @@ const UnscheduledRequestsPage: React.FC = () => {
             </div>
             
             <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="all">All Priorities</option>
-              <option value="high">High Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="low">Low Priority</option>
-            </select>
-            
-            <select
               value={filterBranch}
               onChange={(e) => setFilterBranch(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -340,7 +362,7 @@ const UnscheduledRequestsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">
-              Request Details ({filteredRequests.length} requests)
+              {selectedCard === 'pending' ? 'Pending Requests' : 'Unscheduled Requests'} ({filteredRequests.length} requests)
             </h2>
           </div>
           
@@ -367,10 +389,7 @@ const UnscheduledRequestsPage: React.FC = () => {
                     Pickup Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Charges
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created
@@ -383,7 +402,7 @@ const UnscheduledRequestsPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center">
+                    <td colSpan={9} className="px-6 py-12 text-center">
                       <div className="text-gray-500">
                         <AlertCircleIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                         <p className="text-lg font-medium">No requests found</p>
@@ -395,17 +414,7 @@ const UnscheduledRequestsPage: React.FC = () => {
                   filteredRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-8 w-8">
-                            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                              <UserIcon className="h-4 w-4 text-green-600" />
-                            </div>
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">{request.userName}</div>
-                            <div className="text-sm text-gray-500">ID: {request.id}</div>
-                          </div>
-                        </div>
+                        <div className="text-sm text-gray-900">{request.clientName}</div>
                       </td>
                       
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -438,30 +447,10 @@ const UnscheduledRequestsPage: React.FC = () => {
                       </td>
                       
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(request.priority)}`}>
-                          {getPriorityIcon(request.priority)}
-                          <span className="ml-1 capitalize">{request.priority}</span>
-                        </span>
+                        <div className="text-sm font-medium text-gray-900">
+                          KES {request.price?.toLocaleString() || '0'}
+                        </div>
                       </td>
-                      
-                                             <td className="px-6 py-4 whitespace-nowrap">
-                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                           request.status === 2
-                             ? 'bg-green-100 text-green-800 border border-green-200'
-                             : request.status === 1
-                             ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                             : request.status === 3
-                             ? 'bg-red-100 text-red-800 border border-red-200'
-                             : 'bg-gray-100 text-gray-800 border border-gray-200'
-                         }`}>
-                           {request.status === 2 && <CheckIcon className="h-3 w-3 mr-1" />}
-                           {request.status === 1 && <ClockIcon className="h-3 w-3 mr-1" />}
-                           {request.status === 3 && <XIcon className="h-3 w-3 mr-1" />}
-                           <span className="capitalize">
-                             {getStatusLabel(request.status).replace('_', ' ')}
-                           </span>
-                         </span>
-                       </td>
                       
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDateTime(request.createdAt)}

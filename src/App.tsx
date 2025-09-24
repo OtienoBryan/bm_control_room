@@ -10,6 +10,7 @@ import StaffList from './pages/StaffList';
 import SosList from './pages/SosList';
 import NoticePage from './pages/NoticePage';
 import TeamsList from './pages/TeamList';
+import VehicleManagement from './pages/VehicleManagement';
 import ClientsList from './pages/ClientsPage';
 import ClaimsPage from './pages/ClaimsPage';
 import ReportsPage from './pages/ReportsPage';
@@ -77,6 +78,7 @@ const App = () => {
             <Route path="/dashboard/notices" element={<NoticePage/>} />
             <Route path="/dashboard/daily" element={<DailyRuns/>} />
             <Route path="/dashboard/teams-list" element={<TeamsList/>} />
+            <Route path="/dashboard/vehicle-management" element={<VehicleManagement/>} />
             <Route path="/dashboard/clients-list" element={<ClientsList/>} />
             <Route path="/dashboard/claims" element={<ClaimsPage />} />
             <Route path="/dashboard/runs" element={<Runs />} />
