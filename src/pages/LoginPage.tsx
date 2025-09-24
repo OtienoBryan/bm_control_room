@@ -76,8 +76,8 @@ const LoginPage: React.FC = () => {
         <div className="text-center">
           <div className="flex justify-center">
             <img 
-              src="/logo.jpg" 
-              alt="WELLS FARGO" 
+              src="/bm.jpeg" 
+              alt="BM Security" 
               className="h-50 object-contain"
             />
           </div>

@@ -200,13 +200,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const logoSection = (
-    <div className="flex items-center h-16 flex-shrink-0 px-6 bg-gradient-to-r from-blue-950 to-yellow-700">
+    <div className="flex items-center h-16 flex-shrink-0 px-6 bg-gradient-to-r from-blue-950 to-red-700">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
           <ShieldIcon className="h-6 w-6 text-red-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">Wells Fargo</h1>
+          <h1 className="text-xl font-bold text-white">BM Security</h1>
           <p className="text-xs text-red-100">Logistics Management</p>
         </div>
       </div>
