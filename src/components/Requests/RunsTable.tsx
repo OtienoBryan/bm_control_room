@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRightIcon } from 'lucide-react';
 import { RequestData } from '../../services/requestService';
-import { TableCell, TableRow, Chip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
-import { Visibility } from '@mui/icons-material';
+import { TableCell, TableRow, Chip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, Button } from '@mui/material';
+import { Visibility, Download } from '@mui/icons-material';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface RequestsTableProps {
   requests: RequestData[];
@@ -16,10 +18,62 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
   const [endDate, setEndDate] = useState<string>('');
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [isExporting, setIsExporting] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const handleRequestClick = (requestId: number) => {
     if (onRequestClick) {
       onRequestClick(requestId);
+    }
+  };
+
+  const handleExportToPDF = async () => {
+    if (!tableRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      // Create a canvas from the table
+      const canvas = await html2canvas(tableRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4'); // landscape orientation
+      
+      const imgWidth = 297; // A4 width in mm
+      const pageHeight = 210; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add new pages if content is longer than one page
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Generate filename with current date
+      const currentDate = new Date().toISOString().split('T')[0];
+      const filename = `runs-report-${currentDate}.pdf`;
+      
+      // Download the PDF
+      pdf.save(filename);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -75,7 +129,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
     <div className="flex flex-col">
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-          <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+          <div ref={tableRef} className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
             <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -86,6 +140,23 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
                       Total Runs: {filteredRequests.length}
                     </h3>
+                  </div>
+                  <div className="mt-4 sm:mt-0">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Download />}
+                      onClick={handleExportToPDF}
+                      disabled={isExporting || filteredRequests.length === 0}
+                      sx={{
+                        backgroundColor: '#dc2626',
+                        '&:hover': {
+                          backgroundColor: '#b91c1c',
+                        },
+                      }}
+                    >
+                      {isExporting ? 'Exporting...' : 'Export to PDF'}
+                    </Button>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -22,9 +22,8 @@ const SettingsPage: React.FC = () => {
     setSuccess('');
     setError('');
     try {
-      const updated = await authService.updateUser(String(user!.id), { username, email });
-      setSuccess('Profile updated successfully');
-      login(localStorage.getItem('token') || '', updated); // update context
+      // Since name and email are disabled, we don't need to update them
+      setSuccess('Profile settings are read-only');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to update profile');
     } finally {
@@ -81,21 +80,47 @@ const SettingsPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700">
                     Name
                   </label>
-                  <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="Your name" />
+                  <input 
+                    type="text" 
+                    value={username} 
+                    readOnly
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm" 
+                    placeholder="Your name" 
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Name cannot be changed</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Email
                   </label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="you@example.com" />
+                  <input 
+                    type="email" 
+                    value={email} 
+                    readOnly
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm" 
+                    placeholder="you@example.com" 
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-4">
-                <button onClick={handleSave} disabled={loading} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
-                  {loading ? 'Saving...' : 'Save'}
-                </button>
-                {success && <span className="text-green-600 text-sm">{success}</span>}
-                {error && <span className="text-red-600 text-sm">{error}</span>}
+              <div className="mt-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-blue-800">
+                        Profile Information
+                      </h3>
+                      <div className="mt-2 text-sm text-blue-700">
+                        <p>Name and email are managed by your administrator and cannot be changed here.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
