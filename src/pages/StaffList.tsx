@@ -43,6 +43,8 @@ const StaffList: React.FC = () => {
   const [selectedStaff, setSelectedStaff] = useState<Staff[]>([]);
   const [teamSize, setTeamSize] = useState(4);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
+  const [teamCreationMode, setTeamCreationMode] = useState<'automatic' | 'manual'>('automatic');
+  const [manuallySelectedStaff, setManuallySelectedStaff] = useState<Staff[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -365,67 +367,108 @@ const StaffList: React.FC = () => {
     }
   };
 
+  const handleStaffSelection = (staffMember: Staff, isSelected: boolean) => {
+    if (isSelected) {
+      setManuallySelectedStaff(prev => [...prev, staffMember]);
+    } else {
+      setManuallySelectedStaff(prev => prev.filter(member => member.id !== staffMember.id));
+    }
+  };
+
+  const isStaffSelected = (staffMember: Staff) => {
+    return manuallySelectedStaff.some(member => member.id === staffMember.id);
+  };
+
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsCreatingTeam(true);
       
-      // Get active staff members grouped by role
-      const staffByRole = staff.reduce((acc, member) => {
-        if (member.status === 1) {
-          if (!acc[member.role]) {
-            acc[member.role] = [];
-          }
-          acc[member.role].push(member);
+      if (teamCreationMode === 'manual') {
+        // Manual team creation
+        if (manuallySelectedStaff.length === 0) {
+          setError('Please select at least one team member');
+          return;
         }
-        return acc;
-      }, {} as Record<string, Staff[]>);
 
-      // Create teams ensuring each has the required roles, and add optional roles if available
-      const teams: Staff[][] = [];
-      let teamIndex = 0;
-      let canCreateMoreTeams = true;
-
-      while (canCreateMoreTeams) {
-        const team: Staff[] = [];
-        // Add required roles
-        for (const role of REQUIRED_ROLES) {
-          if (staffByRole[role] && staffByRole[role].length > teamIndex) {
-            team.push(staffByRole[role][teamIndex]);
-          } else {
-            canCreateMoreTeams = false;
-            break;
-          }
+        // Validate that required roles are present
+        const selectedRoles = manuallySelectedStaff.map(member => member.role);
+        const hasRequiredRoles = REQUIRED_ROLES.every(role => selectedRoles.includes(role));
+        
+        if (!hasRequiredRoles) {
+          setError(`Please ensure your team includes at least one member with each required role: ${REQUIRED_ROLES.join(', ')}`);
+          return;
         }
-        // Add optional roles if available
-        for (const role of OPTIONAL_ROLES) {
-          if (staffByRole[role] && staffByRole[role].length > teamIndex) {
-            team.push(staffByRole[role][teamIndex]);
-          }
-        }
-        if (canCreateMoreTeams) {
-          teams.push(team);
-          teamIndex++;
-        }
-      }
 
-      if (teams.length === 0) {
-        setError('Not enough staff to create any teams');
-        return;
-      }
-
-      // Create each team
-      for (const teamMembers of teams) {
+        // Create team with manually selected members
         await teamService.createTeam({
-          name: `${teamName} ${teams.indexOf(teamMembers) + 1}`,
-          members: teamMembers.map(member => member.id)
+          name: teamName,
+          members: manuallySelectedStaff.map(member => member.id)
         });
-      }
 
-      setIsTeamModalOpen(false);
-      setTeamName('');
-      setTeamSize(4);
-      setError(null);
+        setIsTeamModalOpen(false);
+        setTeamName('');
+        setManuallySelectedStaff([]);
+        setError(null);
+      } else {
+        // Automatic team creation (existing logic)
+        // Get active staff members grouped by role
+        const staffByRole = staff.reduce((acc, member) => {
+          if (member.status === 1) {
+            if (!acc[member.role]) {
+              acc[member.role] = [];
+            }
+            acc[member.role].push(member);
+          }
+          return acc;
+        }, {} as Record<string, Staff[]>);
+
+        // Create teams ensuring each has the required roles, and add optional roles if available
+        const teams: Staff[][] = [];
+        let teamIndex = 0;
+        let canCreateMoreTeams = true;
+
+        while (canCreateMoreTeams) {
+          const team: Staff[] = [];
+          // Add required roles
+          for (const role of REQUIRED_ROLES) {
+            if (staffByRole[role] && staffByRole[role].length > teamIndex) {
+              team.push(staffByRole[role][teamIndex]);
+            } else {
+              canCreateMoreTeams = false;
+              break;
+            }
+          }
+          // Add optional roles if available
+          for (const role of OPTIONAL_ROLES) {
+            if (staffByRole[role] && staffByRole[role].length > teamIndex) {
+              team.push(staffByRole[role][teamIndex]);
+            }
+          }
+          if (canCreateMoreTeams) {
+            teams.push(team);
+            teamIndex++;
+          }
+        }
+
+        if (teams.length === 0) {
+          setError('Not enough staff to create any teams');
+          return;
+        }
+
+        // Create each team
+        for (const teamMembers of teams) {
+          await teamService.createTeam({
+            name: `${teamName} ${teams.indexOf(teamMembers) + 1}`,
+            members: teamMembers.map(member => member.id)
+          });
+        }
+
+        setIsTeamModalOpen(false);
+        setTeamName('');
+        setTeamSize(4);
+        setError(null);
+      }
     } catch (err) {
       console.error('Error creating teams:', err);
       setError('Failed to create teams');
@@ -1072,13 +1115,20 @@ const StaffList: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">Create Teams</h3>
-                  <p className="mt-1 text-sm text-gray-500">Automatically generate teams with required roles</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {teamCreationMode === 'manual' 
+                      ? 'Manually select team members' 
+                      : 'Automatically generate teams with required roles'
+                    }
+                  </p>
                 </div>
                 <button
                   onClick={() => {
                     setIsTeamModalOpen(false);
                     setTeamName('');
                     setTeamSize(4);
+                    setManuallySelectedStaff([]);
+                    setTeamCreationMode('automatic');
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
                 >
@@ -1091,9 +1141,38 @@ const StaffList: React.FC = () => {
             </div>
             <form onSubmit={handleCreateTeam} className="px-6 py-6">
               <div className="space-y-6">
+                {/* Team Creation Mode Toggle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Team Creation Mode</label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="teamMode"
+                        value="automatic"
+                        checked={teamCreationMode === 'automatic'}
+                        onChange={(e) => setTeamCreationMode(e.target.value as 'automatic' | 'manual')}
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Automatic</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="teamMode"
+                        value="manual"
+                        checked={teamCreationMode === 'manual'}
+                        onChange={(e) => setTeamCreationMode(e.target.value as 'automatic' | 'manual')}
+                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Manual Selection</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div>
                   <label htmlFor="teamName" className="block text-sm font-medium text-gray-700 mb-2">
-                    Team Name Prefix
+                    {teamCreationMode === 'manual' ? 'Team Name' : 'Team Name Prefix'}
                   </label>
                   <input
                     type="text"
@@ -1102,7 +1181,7 @@ const StaffList: React.FC = () => {
                     onChange={(e) => setTeamName(e.target.value)}
                     required
                     className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                    placeholder="e.g., Team"
+                    placeholder={teamCreationMode === 'manual' ? 'e.g., Alpha Team' : 'e.g., Team'}
                   />
                 </div>
                 
@@ -1125,12 +1204,86 @@ const StaffList: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-blue-900 mb-2">Team Creation Info</h4>
-                  <p className="text-sm text-blue-700">
-                    Teams will be created automatically with the required roles. Each team will have at least one Team Leader and one Driver.
-                  </p>
-                </div>
+                {teamCreationMode === 'manual' ? (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-3">Select Team Members</h4>
+                    <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg bg-white">
+                      {filteredStaff.filter(member => member.status === 1).length === 0 ? (
+                        <div className="p-4 text-center text-gray-500">
+                          No active staff members available
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200">
+                          {filteredStaff
+                            .filter(member => member.status === 1)
+                            .map((member) => (
+                              <label key={member.id} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isStaffSelected(member)}
+                                  onChange={(e) => handleStaffSelection(member, e.target.checked)}
+                                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                                />
+                                <div className="ml-3 flex items-center space-x-3">
+                                  <div className="flex-shrink-0 h-8 w-8">
+                                    {member.photo_url ? (
+                                      <img className="h-8 w-8 rounded-full object-cover" src={member.photo_url} alt={member.name} />
+                                    ) : (
+                                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                                    <div className="text-sm text-gray-500">{member.empl_no} • {member.role}</div>
+                                  </div>
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    member.role === 'Team Leader' ? 'bg-purple-100 text-purple-800' :
+                                    member.role === 'Driver' ? 'bg-blue-100 text-blue-800' :
+                                    member.role === 'Police' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {member.role}
+                                  </span>
+                                </div>
+                              </label>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                    {manuallySelectedStaff.length > 0 && (
+                      <div className="mt-3">
+                        <div className="text-sm text-gray-600 mb-2">Selected Members ({manuallySelectedStaff.length}):</div>
+                        <div className="flex flex-wrap gap-2">
+                          {manuallySelectedStaff.map((member) => (
+                            <span key={member.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              {member.name}
+                              <button
+                                type="button"
+                                onClick={() => handleStaffSelection(member, false)}
+                                className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-purple-200"
+                              >
+                                <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 8 8">
+                                  <path d="M5.5 4L7.5 2 6.5 1 4.5 3 2.5 1 1.5 2 3.5 4 1.5 6 2.5 7 4.5 5 6.5 7 7.5 6 5.5 4z"/>
+                                </svg>
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-2">Team Creation Info</h4>
+                    <p className="text-sm text-blue-700">
+                      Teams will be created automatically with the required roles. Each team will have at least one Team Leader and one Driver.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-8 flex justify-end space-x-3">
@@ -1140,6 +1293,8 @@ const StaffList: React.FC = () => {
                     setIsTeamModalOpen(false);
                     setTeamName('');
                     setTeamSize(4);
+                    setManuallySelectedStaff([]);
+                    setTeamCreationMode('automatic');
                   }}
                   className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                 >

@@ -61,9 +61,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Pickup Date
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Action</span>
                   </th>
@@ -72,7 +69,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                       No requests found
                     </td>
                   </tr>
@@ -86,20 +83,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                       <TableCell>{request.pickupLocation}</TableCell>
                       <TableCell>{request.deliveryLocation}</TableCell>
                       <TableCell>{new Date(request.pickupDate).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={request.status}
-                          color={
-                            request.status === 'completed'
-                              ? 'success'
-                              : request.status === 'in_progress'
-                              ? 'warning'
-                              : request.status === 'cancelled'
-                              ? 'error'
-                              : 'default'
-                          }
-                        />
-                      </TableCell>
                       <TableCell>
                         <IconButton
                           size="small"

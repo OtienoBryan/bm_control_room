@@ -25,7 +25,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
 
   // Get unique clients and branches for filter options
   const uniqueClients = useMemo(() => {
-    return Array.from(new Set(requests.map(request => request.userName))).sort();
+    return Array.from(new Set(requests.map(request => request.clientName))).sort();
   }, [requests]);
 
   const uniqueBranches = useMemo(() => {
@@ -43,7 +43,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
       const dateMatch = (!start || requestDate >= start) && (!end || requestDate <= end);
       
       // Client filter
-      const clientMatch = !selectedClient || request.userName === selectedClient;
+      const clientMatch = !selectedClient || request.clientName === selectedClient;
       
       // Branch filter
       const branchMatch = !selectedBranch || request.branchName === selectedBranch;
@@ -158,9 +158,6 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Pickup Date
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">View</span>
                   </th>
@@ -169,7 +166,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
                       No requests found
                     </td>
                   </tr>
@@ -177,25 +174,11 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                   <>
                     {filteredRequests.map((request) => (
                       <TableRow key={request.id}>
-                        <TableCell>{request.userName}</TableCell>
+                        <TableCell>{request.clientName}</TableCell>
                         <TableCell>{request.branchName}</TableCell>
                         <TableCell>{request.deliveryLocation}</TableCell>
                         <TableCell>{Number(request.price || 0).toFixed(2)}</TableCell>
                         <TableCell>{new Date(request.pickupDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={request.status}
-                            color={
-                              request.status === 'completed'
-                                ? 'success'
-                                : request.status === 'in_progress'
-                                ? 'warning'
-                                : request.status === 'cancelled'
-                                ? 'error'
-                                : 'default'
-                            }
-                          />
-                        </TableCell>
                         <TableCell>
                           <IconButton
                             size="small"

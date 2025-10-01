@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -48,6 +49,7 @@ interface Branch {
 }
 
 const DailyRuns: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateSummaries, setDateSummaries] = useState<DateSummary[]>([]);
@@ -315,6 +317,11 @@ const DailyRuns: React.FC = () => {
     setSelectedMonth(new Date().getMonth() + 1);
   };
 
+  const handleDateClick = (date: string) => {
+    // Navigate to the separate page for date requests
+    navigate(`/dashboard/date-requests/${date}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
@@ -344,6 +351,12 @@ const DailyRuns: React.FC = () => {
               <p className="text-gray-600 mt-2">Monitor daily operations, revenue, and performance metrics</p>
             </div>
             <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/dashboard/runs')}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+              >
+                View Detailed Reports
+              </button>
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -448,7 +461,7 @@ const DailyRuns: React.FC = () => {
         </div>
 
         {/* Summary Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border p-6 border-l-4 border-l-blue-500">
             <div className="flex items-center justify-between">
               <div>
@@ -477,33 +490,7 @@ const DailyRuns: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-6 border-l-4 border-l-yellow-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completion Rate</p>
-                <p className="text-3xl font-bold text-yellow-600">{summaryStats.completionRate.toFixed(1)}%</p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-6 border-l-4 border-l-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg. Run Value</p>
-                <p className="text-3xl font-bold text-purple-600">{formatCurrency(summaryStats.averageRunValue)}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* View Toggle */}
@@ -585,48 +572,34 @@ const DailyRuns: React.FC = () => {
                       Total Runs
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Completed
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Revenue
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Completion Rate
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {dateSummaries.map((summary) => {
-                    const completionRate = summary.totalRuns > 0 ? (summary.totalRunsCompleted / summary.totalRuns) * 100 : 0;
                     return (
                       <tr key={summary.date} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <button
+                            onClick={() => handleDateClick(summary.date)}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                          >
                           {formatDate(summary.date)}
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {summary.totalRuns}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {summary.totalRunsCompleted}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatCurrency(Number(summary.totalAmount || 0))}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            completionRate >= 80 ? 'bg-green-100 text-green-800' :
-                            completionRate >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {completionRate.toFixed(1)}%
-                          </span>
                         </td>
                       </tr>
                     );
                   })}
                   {dateSummaries.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
+                      <td colSpan={3} className="px-6 py-8 text-center text-sm text-gray-500">
                         <div className="flex flex-col items-center">
                           <svg className="h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -643,15 +616,7 @@ const DailyRuns: React.FC = () => {
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="mt-8 flex justify-center">
-          <a
-            href="/dashboard/runs"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
-          >
-            View Detailed Reports
-          </a>
-        </div>
+
       </div>
     </div>
   );

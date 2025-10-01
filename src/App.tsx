@@ -23,6 +23,7 @@ import InTransitRequests from './pages/InTransitRequests';
 import AddClientPage from './pages/AddClientPage';
 import ClientBranchesPage from './pages/ClientBranchesPage';
 import DailyRuns from './pages/DailyRuns';
+import DateRequestsPage from './pages/DateRequestsPage';
 import { SosProvider } from './contexts/SosContext';
 
 // Development cache clearing helper
@@ -114,6 +115,7 @@ const App = () => {
             <Route path="/dashboard/reports" element={<ReportsPage />} />
             <Route path="/dashboard/clients/add" element={<AddClientPage />} />
             <Route path="/dashboard/clients/:id/branches" element={<ClientBranchesPage />} />
+            <Route path="/dashboard/date-requests/:date" element={<DateRequestsPage />} />
           </Route>
           
           <Route path="/settings" element={
