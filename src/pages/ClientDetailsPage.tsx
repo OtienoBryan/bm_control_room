@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { clientService, Client } from '../services/clientService';
 import { Branch, getBranches, deleteBranch } from '../services/branchService';
 import serviceChargeService, { ServiceCharge } from '../services/serviceChargeService';
+import processingFeeService, { ProcessingFee } from '../services/processingFeeService';
 import { 
   Building2, 
   Plus, 
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 import BranchModal from '../components/Clients/BranchModal';
 import ServiceChargeModal from '../components/Clients/ServiceChargeModal';
+import ProcessingFeeModal from '../components/Clients/ProcessingFeeModal';
 
 const ClientDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,26 +32,31 @@ const ClientDetailsPage: React.FC = () => {
   const [client, setClient] = useState<Client | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+  const [processingFees, setProcessingFees] = useState<ProcessingFee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isServiceChargeModalOpen, setIsServiceChargeModalOpen] = useState(false);
   const [editingServiceCharge, setEditingServiceCharge] = useState<ServiceCharge | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'branches' | 'service-charges'>('overview');
+  const [isProcessingFeeModalOpen, setIsProcessingFeeModalOpen] = useState(false);
+  const [editingProcessingFee, setEditingProcessingFee] = useState<ProcessingFee | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'branches' | 'service-charges' | 'processing-fees'>('overview');
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [clientData, branchesData, serviceChargesData] = await Promise.all([
+      const [clientData, branchesData, serviceChargesData, processingFeesData] = await Promise.all([
         clientService.getClient(Number(id)),
         getBranches(id),
-        serviceChargeService.getServiceCharges(Number(id))
+        serviceChargeService.getServiceCharges(Number(id)),
+        processingFeeService.getProcessingFees(Number(id))
       ]);
       setClient(clientData);
       setBranches(branchesData);
       setServiceCharges(serviceChargesData);
+      setProcessingFees(processingFeesData);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to load client data');
@@ -104,6 +111,27 @@ const ClientDetailsPage: React.FC = () => {
     }
   };
 
+  const handleAddProcessingFee = () => {
+    setEditingProcessingFee(null);
+    setIsProcessingFeeModalOpen(true);
+  };
+
+  const handleEditProcessingFee = (fee: ProcessingFee) => {
+    setEditingProcessingFee(fee);
+    setIsProcessingFeeModalOpen(true);
+  };
+
+  const handleDeleteProcessingFee = async (feeId: number) => {
+    if (window.confirm('Are you sure you want to delete this processing fee? This action cannot be undone.')) {
+      try {
+        await processingFeeService.deleteProcessingFee(Number(id), feeId);
+        setProcessingFees(processingFees.filter(fee => fee.id !== feeId));
+      } catch (error) {
+        console.error('Error deleting processing fee:', error);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -152,6 +180,7 @@ const ClientDetailsPage: React.FC = () => {
   }
 
   const totalServiceCharges = serviceCharges.length;
+  const totalProcessingFees = processingFees.length;
   const totalBranches = branches.length;
   const clientAge = Math.floor((Date.now() - new Date(client.created_at).getTime()) / (1000 * 60 * 60 * 24));
 
@@ -181,7 +210,7 @@ const ClientDetailsPage: React.FC = () => {
 
       {/* Client Overview Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="p-5">
               <div className="flex items-center">
@@ -230,6 +259,24 @@ const ClientDetailsPage: React.FC = () => {
                   <dl>
                     <dt className="text-sm font-medium text-gray-500 truncate">Service Charges</dt>
                     <dd className="text-lg font-medium text-gray-900">{totalServiceCharges}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Processing Fees</dt>
+                    <dd className="text-lg font-medium text-gray-900">{totalProcessingFees}</dd>
                   </dl>
                 </div>
               </div>
@@ -356,6 +403,16 @@ const ClientDetailsPage: React.FC = () => {
               >
                 Service Charges ({totalServiceCharges})
               </button>
+              <button
+                onClick={() => setActiveTab('processing-fees')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'processing-fees'
+                    ? 'border-red-500 text-red-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Processing Fees ({totalProcessingFees})
+              </button>
             </nav>
           </div>
 
@@ -387,6 +444,16 @@ const ClientDetailsPage: React.FC = () => {
                           <span className="text-sm font-medium text-gray-900">Manage Service Charges</span>
                         </div>
                         <span className="text-sm text-gray-500">{totalServiceCharges} charges</span>
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('processing-fees')}
+                        className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-red-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-center">
+                          <DollarSign className="w-5 h-5 text-gray-400 mr-3" />
+                          <span className="text-sm font-medium text-gray-900">Manage Processing Fees</span>
+                        </div>
+                        <span className="text-sm text-gray-500">{totalProcessingFees} fees</span>
                       </button>
                       <button
                         onClick={() => navigate(`/dashboard/clients/${id}/service-requests`)}
@@ -549,7 +616,7 @@ const ClientDetailsPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-gray-900 font-mono">
-                                ${Number(charge.price).toFixed(2)}
+                                {Number(charge.price).toFixed(2)}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -567,6 +634,100 @@ const ClientDetailsPage: React.FC = () => {
                                 </button>
                                 <button
                                   onClick={() => handleDeleteServiceCharge(charge.id)}
+                                  className="text-red-600 hover:text-red-900 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'processing-fees' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900">Processing Fees</h3>
+                  <button
+                    onClick={handleAddProcessingFee}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Processing Fee
+                  </button>
+                </div>
+                
+                {processingFees.length === 0 ? (
+                  <div className="text-center py-12">
+                    <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No processing fees</h3>
+                    <p className="mt-1 text-sm text-gray-500">Get started by adding your first processing fee.</p>
+                    <div className="mt-6">
+                      <button
+                        onClick={handleAddProcessingFee}
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Processing Fee
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Percentage
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {processingFees.map((fee) => (
+                          <tr key={fee.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900 font-mono">
+                                {fee.amount}%
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                fee.is_active 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {fee.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">
+                                {new Date(fee.created_at).toLocaleDateString()}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex justify-end space-x-2">
+                                <button
+                                  onClick={() => handleEditProcessingFee(fee)}
+                                  className="text-blue-600 hover:text-blue-900 transition-colors"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProcessingFee(fee.id)}
                                   className="text-red-600 hover:text-red-900 transition-colors"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -609,6 +770,15 @@ const ClientDetailsPage: React.FC = () => {
         onClose={() => setIsServiceChargeModalOpen(false)}
         clientId={Number(id)}
         editingCharge={editingServiceCharge}
+        onSuccess={fetchData}
+      />
+
+      {/* Processing Fee Modal */}
+      <ProcessingFeeModal
+        isOpen={isProcessingFeeModalOpen}
+        onClose={() => setIsProcessingFeeModalOpen(false)}
+        clientId={Number(id)}
+        editingFee={editingProcessingFee}
         onSuccess={fetchData}
       />
     </div>

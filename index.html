@@ -5,10 +5,30 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BM Security</title>
+    <!-- Cache busting meta tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
+    <script>
+      // Force clear all caches on page load
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      
+      // Clear storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Add timestamp to prevent caching
+      const timestamp = Date.now();
+      document.title = `BM Security - ${timestamp}`;
+    </script>
   </body>
 </html>

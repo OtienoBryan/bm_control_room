@@ -33,9 +33,21 @@ export interface ApiError extends Error {
 const getApiBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
   console.log('API base URL:', url);
+  
+  // Default fallback URL
+  const defaultUrl = 'http://localhost:5005/api';
+  
   if (!url) {
-    console.warn('VITE_API_URL is not defined, falling back to localhost');
-    return 'http://localhost:5000/api';
+    console.warn('VITE_API_URL is not defined, falling back to localhost:5005');
+    return defaultUrl;
+  }
+  
+  // Validate URL format
+  try {
+    new URL(url);
+  } catch (error) {
+    console.error('Invalid VITE_API_URL format:', url, error);
+    return defaultUrl;
   }
   
   // Ensure URL ends with /api

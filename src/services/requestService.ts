@@ -37,7 +37,7 @@ export interface Request {
 }
 
 export const requestService = {
-  createRequest: async (data: RequestData): Promise<any> => {
+  createRequest: async (data: any): Promise<any> => {
     try {
       console.log('Creating request with data:', JSON.stringify(data, null, 2));
       const response = await api.post<any>('/requests', data);

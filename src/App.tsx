@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardLayout from './components/Dashboard/DashboardLayout';
@@ -24,6 +24,35 @@ import AddClientPage from './pages/AddClientPage';
 import ClientBranchesPage from './pages/ClientBranchesPage';
 import DailyRuns from './pages/DailyRuns';
 import { SosProvider } from './contexts/SosContext';
+
+// Development cache clearing helper
+const DevCacheHelper = () => {
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      // Add keyboard shortcut to clear cache (Ctrl+Shift+R)
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+          console.log('Clearing all caches...');
+          if ('caches' in window) {
+            caches.keys().then((names) => {
+              names.forEach((name) => {
+                caches.delete(name);
+              });
+            });
+          }
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.reload();
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, []);
+
+  return null;
+};
 
 // Protected route wrapper
 const ProtectedRoute = () => {
@@ -97,6 +126,7 @@ const App = () => {
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <DevCacheHelper />
     </SosProvider>
   );
 };

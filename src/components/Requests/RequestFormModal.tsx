@@ -11,7 +11,7 @@ import {
   CheckCircleIcon,
   LoaderIcon
 } from 'lucide-react';
-import { RequestData, requestService } from '../../services/requestService';
+import { requestService } from '../../services/requestService';
 import { ServiceType, serviceTypeService } from '../../services/serviceTypeService';
 import { useAuth } from '../../contexts/AuthContext';
 import { Branch, getAllBranches } from '../../services/branchService';
@@ -31,6 +31,23 @@ export interface RequestFormData {
   dropoffLocation: string;
   pickupDate: string;
   pickupTime: string;
+  clientName?: string;
+  manualCharge?: string;
+}
+
+interface CreateRequestPayload {
+  userId: number;
+  userName: string;
+  serviceTypeId: number;
+  pickupLocation: string;
+  deliveryLocation: string;
+  pickupDate: string;
+  priority: string;
+  status: number;
+  myStatus: number;
+  branchId: number;
+  price: number;
+  clientName?: string;
 }
 
 const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -41,7 +58,9 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
     pickupLocation: '',
     dropoffLocation: '',
     pickupDate: '',
-    pickupTime: ''
+    pickupTime: '',
+    clientName: '',
+    manualCharge: ''
   });
   const [branches, setBranches] = useState<Branch[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
@@ -50,6 +69,7 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedServiceCharge, setSelectedServiceCharge] = useState<ServiceCharge | null>(null);
+  const [isAdhoc, setIsAdhoc] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,9 +97,10 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
 
   useEffect(() => {
     const fetchServiceCharges = async () => {
-      if (!formData.branchId) {
+      if (!formData.branchId || formData.branchId === 'adhoc') {
         setServiceCharges([]);
         setSelectedServiceCharge(null);
+        setIsAdhoc(formData.branchId === 'adhoc');
         return;
       }
 
@@ -94,6 +115,7 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
         setServiceCharges(charges);
         setSelectedServiceCharge(null);
         setFormData(prev => ({ ...prev, serviceTypeId: '' }));
+        setIsAdhoc(false);
       } catch (error) {
         console.error('Error fetching service charges:', error);
         setError('Failed to load service charges');
@@ -120,28 +142,52 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
         throw new Error('User information is required');
       }
 
-      const selectedBranch = branches.find(b => b.id.toString() === formData.branchId);
-      if (!selectedBranch?.client_id) {
-        throw new Error('Selected branch has no associated client');
+      let branchId: number;
+      let price: number;
+
+      if (isAdhoc) {
+        if (!formData.clientName || !formData.manualCharge || !formData.serviceTypeId) {
+          throw new Error('Client name, service type, and manual charge are required for Adhoc requests');
+        }
+        branchId = 0; // Special ID for Adhoc requests
+        price = parseFloat(formData.manualCharge);
+      } else {
+        const selectedBranch = branches.find(b => b.id.toString() === formData.branchId);
+        if (!selectedBranch?.client_id) {
+          throw new Error('Selected branch has no associated client');
+        }
+
+        if (!selectedServiceCharge) {
+          throw new Error('No service charge found for selected service type');
+        }
+
+        branchId = parseInt(formData.branchId);
+        price = selectedServiceCharge.price;
       }
 
-      if (!selectedServiceCharge) {
-        throw new Error('No service charge found for selected service type');
-      }
+      console.log('Branch ID and type:', { branchId, type: typeof branchId, isAdhoc });
 
-      const requestData: RequestData = {
+      const requestData: CreateRequestPayload = {
         userId: user.id,
         userName: user.username,
-        serviceTypeId: parseInt(formData.serviceTypeId),
+        serviceTypeId: parseInt(formData.serviceTypeId), // Use selected service type for both regular and Adhoc
         pickupLocation: formData.pickupLocation,
         deliveryLocation: formData.dropoffLocation,
         pickupDate: `${formData.pickupDate}T${formData.pickupTime}`,
         priority: 'medium',
         status: 0,
         myStatus: 0,
-        branchId: parseInt(formData.branchId),
-        price: selectedServiceCharge.price
+        branchId: branchId,
+        price: price,
+        clientName: isAdhoc ? formData.clientName : undefined
       };
+
+      console.log('Submitting request data:', {
+        isAdhoc,
+        formData,
+        requestData,
+        user: { id: user.id, username: user.username }
+      });
 
       await requestService.createRequest(requestData);
       onSuccess();
@@ -160,9 +206,12 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
       pickupLocation: '',
       dropoffLocation: '',
       pickupDate: '',
-      pickupTime: ''
+      pickupTime: '',
+      clientName: '',
+      manualCharge: ''
     });
     setSelectedServiceCharge(null);
+    setIsAdhoc(false);
     setError(null);
   };
 
@@ -253,13 +302,14 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                              <Building2Icon className="h-4 w-4 mr-2 text-blue-600" />
                              Select Branch
                            </label>
-                                                     <select
-                             value={formData.branchId}
-                             onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                             required
-                           >
+                          <select
+                            value={formData.branchId}
+                            onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            required
+                          >
                             <option value="">Choose a branch</option>
+                            <option value="adhoc">Adhoc Request</option>
                             {branches.map((branch) => (
                               <option key={branch.id} value={branch.id}>
                                 {branch.name}
@@ -274,24 +324,32 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                              <PackageIcon className="h-4 w-4 mr-2 text-blue-600" />
                              Service Type & Pricing
                            </label>
-                                                     <select
-                             value={formData.serviceTypeId}
-                             onChange={(e) => setFormData({ ...formData, serviceTypeId: e.target.value })}
-                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                             required
-                             disabled={!formData.branchId}
-                           >
+                          <select
+                            value={formData.serviceTypeId}
+                            onChange={(e) => setFormData({ ...formData, serviceTypeId: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            required
+                            disabled={!formData.branchId}
+                          >
                             <option value="">
                               {formData.branchId ? 'Choose a service type' : 'Select a branch first'}
                             </option>
-                                                         {serviceCharges.map((charge) => (
-                               <option key={charge.service_type_id} value={charge.service_type_id}>
-                                 {charge.service_type_name} - {charge.price}
-                               </option>
-                             ))}
+                            {isAdhoc ? (
+                              serviceTypes.map((serviceType) => (
+                                <option key={serviceType.id} value={serviceType.id}>
+                                  {serviceType.name}
+                                </option>
+                              ))
+                            ) : (
+                              serviceCharges.map((charge) => (
+                                <option key={charge.service_type_id} value={charge.service_type_id}>
+                                  {charge.service_type_name} - {charge.price}
+                                </option>
+                              ))
+                            )}
                           </select>
                           
-                                                     {selectedServiceCharge && (
+                                                     {!isAdhoc && selectedServiceCharge && (
                              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                <div className="flex items-center justify-between">
                                  <span className="text-sm text-blue-800">
@@ -303,7 +361,59 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                                </div>
                              </div>
                            )}
+                           
+                           {isAdhoc && formData.serviceTypeId && (
+                             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                               <div className="flex items-center justify-between">
+                                 <span className="text-sm text-blue-800">
+                                   Service: <span className="font-semibold">
+                                     {serviceTypes.find(st => st.id.toString() === formData.serviceTypeId)?.name}
+                                   </span>
+                                 </span>
+                                 <span className="text-lg font-bold text-blue-700">
+                                   Manual Charge: {formData.manualCharge}
+                                 </span>
+                               </div>
+                             </div>
+                           )}
                         </div>
+
+                        {/* Adhoc Fields */}
+                        {isAdhoc && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                                <Building2Icon className="h-4 w-4 mr-2 text-blue-600" />
+                                Client Name
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.clientName || ''}
+                                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                placeholder="Enter client name"
+                                required={isAdhoc}
+                              />
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                                <PackageIcon className="h-4 w-4 mr-2 text-blue-600" />
+                                Manual Charge
+                              </label>
+                              <input
+                                type="number"
+                                value={formData.manualCharge || ''}
+                                onChange={(e) => setFormData({ ...formData, manualCharge: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                placeholder="Enter charge amount"
+                                min="0"
+                                step="0.01"
+                                required={isAdhoc}
+                              />
+                            </div>
+                          </div>
+                        )}
 
                         {/* Location Details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -371,7 +481,7 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                         </div>
 
                         {/* Summary */}
-                        {selectedServiceCharge && formData.pickupDate && formData.pickupTime && (
+                        {((selectedServiceCharge && !isAdhoc) || (isAdhoc && formData.clientName && formData.manualCharge && formData.serviceTypeId)) && formData.pickupDate && formData.pickupTime && (
                           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
                               <CheckCircleIcon className="h-4 w-4 mr-2" />
@@ -380,12 +490,25 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div>
                                 <span className="text-blue-700 font-medium">Service:</span>
-                                <p className="text-blue-900">{selectedServiceCharge.service_type_name}</p>
+                                <p className="text-blue-900">
+                                  {isAdhoc 
+                                    ? serviceTypes.find(st => st.id.toString() === formData.serviceTypeId)?.name
+                                    : selectedServiceCharge?.service_type_name
+                                  }
+                                </p>
                               </div>
-                                                             <div>
-                                 <span className="text-blue-700 font-medium">Price:</span>
-                                 <p className="text-blue-900 font-semibold">{selectedServiceCharge.price}</p>
-                               </div>
+                              {isAdhoc && (
+                                <div>
+                                  <span className="text-blue-700 font-medium">Client:</span>
+                                  <p className="text-blue-900">{formData.clientName}</p>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-blue-700 font-medium">Price:</span>
+                                <p className="text-blue-900 font-semibold">
+                                  {isAdhoc ? formData.manualCharge : selectedServiceCharge?.price}
+                                </p>
+                              </div>
                               <div>
                                 <span className="text-blue-700 font-medium">Date:</span>
                                 <p className="text-blue-900">{new Date(formData.pickupDate).toLocaleDateString()}</p>
@@ -407,11 +530,11 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                           >
                             Cancel
                           </button>
-                                                     <button
-                             type="submit"
-                             disabled={isSubmitting || !formData.branchId || !formData.serviceTypeId}
-                             className="flex-1 px-6 py-3 text-white bg-red-900 hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition-colors font-medium flex items-center justify-center"
-                           >
+                          <button
+                            type="submit"
+                            disabled={isSubmitting || !formData.branchId || !formData.serviceTypeId || (isAdhoc && (!formData.clientName || !formData.manualCharge))}
+                            className="flex-1 px-6 py-3 text-white bg-red-900 hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition-colors font-medium flex items-center justify-center"
+                          >
                             {isSubmitting ? (
                               <>
                                 <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
