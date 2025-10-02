@@ -128,3 +128,4 @@ npm run dev
 5. **Use Nuclear Option**: Complete reinstall
 
 The app should now always load the latest version! 🎉
+
