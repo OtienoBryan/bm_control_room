@@ -34,15 +34,23 @@ const getApiBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
   console.log('API base URL:', url);
   
-  // Default fallback URL
-  const defaultUrl = 'http://localhost:5005/api';
+  // Check if we're in production (deployed on Vercel)
+  const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  
+  // Default fallback URLs
+  const defaultUrl = isProduction ? '/api' : 'http://localhost:5005/api';
   
   if (!url) {
-    console.warn('VITE_API_URL is not defined, falling back to localhost:5005');
+    console.warn(`VITE_API_URL is not defined, falling back to ${defaultUrl}`);
     return defaultUrl;
   }
   
-  // Validate URL format
+  // If URL is relative (starts with /), use it as is (for Vercel proxy)
+  if (url.startsWith('/')) {
+    return url;
+  }
+  
+  // Validate URL format for absolute URLs
   try {
     new URL(url);
   } catch (error) {
@@ -50,7 +58,7 @@ const getApiBaseUrl = (): string => {
     return defaultUrl;
   }
   
-  // Ensure URL ends with /api
+  // Ensure URL ends with /api for absolute URLs
   if (!url.endsWith('/api')) {
     return url + '/api';
   }
