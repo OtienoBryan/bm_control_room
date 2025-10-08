@@ -21,67 +21,67 @@
 	"rewrites": [
 	  {
 		"source": "/api/:path*",
-		"destination": "http://139.59.44.175:5005/api/:path*"
+		"destination": "http://143.110.191.116:3004/api/:path*"
 	  },
 	  {
 		"source": "/auth/:path*",
-		"destination": "http://139.59.44.175:5005/api/auth/:path*"
+		"destination": "http://143.110.191.116:3004/api/auth/:path*"
 	  },
 	  {
 		"source": "/requests/:path*",
-		"destination": "http://139.59.44.175:5005/api/requests/:path*"
+		"destination": "http://143.110.191.116:3004/api/requests/:path*"
 	  },
 	  {
 		"source": "/clients/:path*",
-		"destination": "http://139.59.44.175:5005/api/clients/:path*"
+		"destination": "http://143.110.191.116:3004/api/clients/:path*"
 	  },
 	  {
 		"source": "/staff/:path*",
-		"destination": "http://139.59.44.175:5005/api/staff/:path*"
+		"destination": "http://143.110.191.116:3004/api/staff/:path*"
 	  },
 	  {
 		"source": "/teams/:path*",
-		"destination": "http://139.59.44.175:5005/api/teams/:path*"
+		"destination": "http://143.110.191.116:3004/api/teams/:path*"
 	  },
 	  {
 		"source": "/branches/:path*",
-		"destination": "http://139.59.44.175:5005/api/branches/:path*"
+		"destination": "http://143.110.191.116:3004/api/branches/:path*"
 	  },
 	  {
 		"source": "/notices/:path*",
-		"destination": "http://139.59.44.175:5005/api/notices/:path*"
+		"destination": "http://143.110.191.116:3004/api/notices/:path*"
 	  },
 	  {
 		"source": "/inquiries/:path*",
-		"destination": "http://139.59.44.175:5005/api/inquiries/:path*"
+		"destination": "http://143.110.191.116:3004/api/inquiries/:path*"
 	  },
 	  {
 		"source": "/service-types/:path*",
-		"destination": "http://139.59.44.175:5005/api/service-types/:path*"
+		"destination": "http://143.110.191.116:3004/api/service-types/:path*"
 	  },
 	  {
 		"source": "/roles/:path*",
-		"destination": "http://139.59.44.175:5005/api/roles/:path*"
+		"destination": "http://143.110.191.116:3004/api/roles/:path*"
 	  },
 	  {
 		"source": "/upload/:path*",
-		"destination": "http://139.59.44.175:5005/api/upload/:path*"
+		"destination": "http://143.110.191.116:3004/api/upload/:path*"
 	  },
 	  {
 		"source": "/policies/:path*",
-		"destination": "http://139.59.44.175:5005/api/policies/:path*"
+		"destination": "http://143.110.191.116:3004/api/policies/:path*"
 	  },
 	  {
 		"source": "/payments/:path*",
-		"destination": "http://139.59.44.175:5005/api/payments/:path*"
+		"destination": "http://143.110.191.116:3004/api/payments/:path*"
 	  },
 	  {
 		"source": "/sos/:path*",
-		"destination": "http://139.59.44.175:5005/api/sos/:path*"
+		"destination": "http://143.110.191.116:3004/api/sos/:path*"
 	  },
 	  {
 		"source": "/runs/:path*",
-		"destination": "http://139.59.44.175:5005/api/runs/:path*"
+		"destination": "http://143.110.191.116:3004/api/runs/:path*"
 	  },
 	  {
 		"source": "/(.*)",

@@ -76,7 +76,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                 ) : (
                   requests.map((request) => (
                     <TableRow key={request.id}>
-                      <TableCell>{request.userName}</TableCell>
+                      <TableCell>{request.clientName}</TableCell>
                       <TableCell>{request.branchName}</TableCell>
                       <TableCell>{request.serviceTypeName}</TableCell>
                       <TableCell>{Number(request.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>

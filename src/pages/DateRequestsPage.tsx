@@ -333,7 +333,7 @@ const DateRequestsPage: React.FC = () => {
                   {filteredRequests.map((request) => (
                     <tr key={request.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {request.clientName || request.userName || 'N/A'}
+                        {request.clientName || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {request.branchName || 'N/A'}
