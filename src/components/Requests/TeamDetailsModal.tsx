@@ -73,7 +73,7 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                     as="div"
                     className="flex items-center justify-between mb-4"
                   >
-                    <h3 className="text-lg font-medium leading-6 text-gray-900">
+                    <h3 className="text-sm font-medium leading-6 text-gray-900">
                       Request Details
                     </h3>
                     <button
@@ -87,21 +87,21 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
 
                   <div className="mt-4">
                     <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Request Information</h4>
+                      <h4 className="text-xs font-medium text-gray-900 mb-2">Request Information</h4>
                       <div className="space-y-2">
                         <div>
-                          <p className="text-sm text-gray-500">Pickup Location</p>
-                          <p className="text-sm font-medium">{request.pickupLocation}</p>
+                          <p className="text-xs text-gray-500">Pickup Location</p>
+                          <p className="text-xs font-medium">{request.pickupLocation}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Delivery Location</p>
+                          <p className="text-xs text-gray-500">Delivery Location</p>
                           {isEditingLocation ? (
                             <form onSubmit={handleLocationSubmit} className="mt-1">
                               <input
                                 type="text"
                                 value={deliveryLocation}
                                 onChange={(e) => setDeliveryLocation(e.target.value)}
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-xs"
                                 disabled={isSubmitting}
                               />
                               <div className="mt-2 flex justify-end space-x-2">
@@ -126,7 +126,7 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                             </form>
                           ) : (
                             <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium">{request.deliveryLocation}</p>
+                              <p className="text-xs font-medium">{request.deliveryLocation}</p>
                               <button
                                 onClick={() => setIsEditingLocation(true)}
                                 className="text-gray-400 hover:text-gray-500"
@@ -137,21 +137,21 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                           )}
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Pickup Date</p>
-                          <p className="text-sm font-medium">
+                          <p className="text-xs text-gray-500">Pickup Date</p>
+                          <p className="text-xs font-medium">
                             {new Date(request.pickupDate).toLocaleString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500">Priority</p>
-                          <p className="text-sm font-medium capitalize">{request.priority}</p>
+                          <p className="text-xs text-gray-500">Priority</p>
+                          <p className="text-xs font-medium capitalize">{request.priority}</p>
                         </div>
                       </div>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-gray-900">Assigned Team</h4>
+                        <h4 className="text-xs font-medium text-gray-900">Assigned Team</h4>
                         <button
                           onClick={() => setIsAssignTeamModalOpen(true)}
                           className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-900 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -162,7 +162,7 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                       </div>
                       {team ? (
                         <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm font-medium mb-4">{team.name}</p>
+                          <p className="text-xs font-medium mb-4">{team.name}</p>
                           <div className="space-y-4">
                             {team.members.map((member) => (
                               <div key={member.id} className="flex items-center space-x-3">
@@ -174,15 +174,15 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                                   />
                                 )}
                                 <div>
-                                  <p className="text-sm font-medium">{member.name}</p>
-                                  <p className="text-sm text-gray-500">{member.role}</p>
+                                  <p className="text-xs font-medium">{member.name}</p>
+                                  <p className="text-xs text-gray-500">{member.role}</p>
                                 </div>
                               </div>
                             ))}
                           </div>
                         </div>
                       ) : (
-                        <div className="text-center py-4 text-gray-500">
+                        <div className="text-center py-4 text-xs text-gray-500">
                           No team has been assigned to this request yet.
                         </div>
                       )}
@@ -193,7 +193,7 @@ const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                     >
                       Close
                     </button>

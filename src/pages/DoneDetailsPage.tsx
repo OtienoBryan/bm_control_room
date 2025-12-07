@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { DateTime } from 'luxon';
@@ -30,7 +30,7 @@ interface Branch {
   client_id: number;
 }
 
-const DateRequestsPage: React.FC = () => {
+const DoneDetailsPage: React.FC = () => {
   const { date } = useParams<{ date: string }>();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<RequestData[]>([]);
@@ -44,7 +44,7 @@ const DateRequestsPage: React.FC = () => {
   const [selectedRequestType, setSelectedRequestType] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const fetchRequests = React.useCallback(async () => {
+  const fetchRequests = useCallback(async () => {
     if (!date) return;
     
     try {
@@ -53,8 +53,8 @@ const DateRequestsPage: React.FC = () => {
       
       // Decode the date from URL parameter
       const decodedDate = decodeURIComponent(date);
-      console.log('DateRequestsPage - Original URL param:', date);
-      console.log('DateRequestsPage - Decoded date:', decodedDate);
+      console.log('DoneDetailsPage - Original URL param:', date);
+      console.log('DoneDetailsPage - Decoded date:', decodedDate);
       
       // Extract just the date part (YYYY-MM-DD) - remove time and any spaces if present
       // Use the date exactly as it comes from the database - NO conversion, NO timezone handling
@@ -85,9 +85,10 @@ const DateRequestsPage: React.FC = () => {
       // Use the date string as-is (YYYY-MM-DD format) - exactly as from database
       // NO conversion, NO timezone handling - use the string directly
       
-      console.log('DateRequestsPage - Final formatted date for API:', dateStr);
+      console.log('DoneDetailsPage - Final formatted date for API:', dateStr);
       
-      // Make API call with the formatted date
+      // Make API call with the formatted date and my_status = 3
+      // This will fetch ONLY requests for this specific date
       const response = await api.get('/requests', {
         params: { 
           date: dateStr,
@@ -95,16 +96,39 @@ const DateRequestsPage: React.FC = () => {
         }
       });
       
-      console.log('DateRequestsPage - API response status:', response.status);
-      console.log('DateRequestsPage - Fetched requests count:', response.data?.length || 0);
-      if (response.data && response.data.length > 0) {
-        console.log('DateRequestsPage - Sample request pickup_date:', response.data[0].pickupDate || response.data[0].pickup_date);
-      }
+      console.log('DoneDetailsPage - API response status:', response.status);
+      console.log('DoneDetailsPage - Fetched requests count:', response.data?.length || 0);
       
-      setRequests(response.data || []);
+      // Verify all returned requests are for the correct date
+      if (response.data && response.data.length > 0) {
+        const sampleRequest = response.data[0];
+        const requestDate = sampleRequest.pickupDate || sampleRequest.pickup_date;
+        console.log('DoneDetailsPage - Sample request pickup_date:', requestDate);
+        console.log('DoneDetailsPage - Expected date:', dateStr);
+        
+        // Filter out any requests that don't match the date (safety check)
+        const filteredByDate = response.data.filter((req: any) => {
+          const reqDate = req.pickupDate || req.pickup_date;
+          if (reqDate) {
+            const reqDateStr = typeof reqDate === 'string' 
+              ? reqDate.split('T')[0].split(' ')[0] 
+              : new Date(reqDate).toISOString().split('T')[0];
+            return reqDateStr === dateStr;
+          }
+          return false;
+        });
+        
+        if (filteredByDate.length !== response.data.length) {
+          console.warn(`DoneDetailsPage - Filtered out ${response.data.length - filteredByDate.length} requests that didn't match the date`);
+        }
+        
+        setRequests(filteredByDate);
+      } else {
+        setRequests([]);
+      }
     } catch (error: any) {
-      console.error('DateRequestsPage - Error fetching requests:', error);
-      console.error('DateRequestsPage - Error response:', error?.response?.data);
+      console.error('DoneDetailsPage - Error fetching requests:', error);
+      console.error('DoneDetailsPage - Error response:', error?.response?.data);
       const errorMessage = error?.response?.data?.message || error?.message || 'Failed to fetch requests';
       setError(errorMessage);
     } finally {
@@ -131,7 +155,6 @@ const DateRequestsPage: React.FC = () => {
   useEffect(() => {
     applyFilters();
   }, [requests, selectedClient, selectedBranch, selectedRequestType]);
-
 
   const fetchClients = async () => {
     try {
@@ -213,10 +236,10 @@ const DateRequestsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="px-3 sm:px-4 lg:px-6 py-4">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
             <div className="h-96 bg-gray-200 rounded"></div>
           </div>
         </div>
@@ -226,17 +249,17 @@ const DateRequestsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="px-3 sm:px-4 lg:px-6 py-4">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="bg-red-50 border-l-4 border-red-400 p-3">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="ml-2">
+                <p className="text-xs text-red-700">{error}</p>
               </div>
             </div>
           </div>
@@ -246,32 +269,32 @@ const DateRequestsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
+    <div className="px-3 sm:px-4 lg:px-6 py-4">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-4">
           <div className="flex items-center justify-between">
             <div>
               <button
-                onClick={() => navigate('/dashboard/daily')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mb-4"
+                onClick={() => navigate('/dashboard/done-requests')}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mb-3"
               >
                 <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Back to Daily Runs
+                Back to Done Requests
               </button>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Completed Requests for {date ? formatDate(date) : ''}
+              <h1 className="text-base font-bold text-gray-900">
+                Done Requests for {date ? formatDate(date) : ''}
               </h1>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-1 text-xs text-gray-500">
                 {filteredRequests.length} of {requests.length} completed request{requests.length !== 1 ? 's' : ''} found
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
@@ -284,14 +307,14 @@ const DateRequestsPage: React.FC = () => {
 
         {/* Filters Section */}
         {showFilters && (
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Client</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Client</label>
                 <select
                   value={selectedClient}
                   onChange={(e) => setSelectedClient(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                  className="w-full px-3 py-1.5 text-xs rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                 >
                   <option value="">All Clients</option>
                   {clients.map(client => (
@@ -301,11 +324,11 @@ const DateRequestsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Branch</label>
                 <select
                   value={selectedBranch}
                   onChange={(e) => setSelectedBranch(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100"
+                  className="w-full px-3 py-1.5 text-xs rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 disabled:bg-gray-100"
                   disabled={!selectedClient}
                 >
                   <option value="">All Branches</option>
@@ -316,11 +339,11 @@ const DateRequestsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Request Type</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Request Type</label>
                 <select
                   value={selectedRequestType}
                   onChange={(e) => setSelectedRequestType(e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                  className="w-full px-3 py-1.5 text-xs rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                 >
                   <option value="">All Types</option>
                   <option value="normal">Normal</option>
@@ -329,10 +352,10 @@ const DateRequestsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-3">
               <button
                 onClick={clearFilters}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Clear Filters
               </button>
@@ -414,4 +437,5 @@ const DateRequestsPage: React.FC = () => {
   );
 };
 
-export default DateRequestsPage;
+export default DoneDetailsPage;
+

@@ -34,34 +34,34 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
 
   return (
     <div className="flex flex-col">
-      <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+      <div className="-my-2 overflow-x-auto sm:-mx-4 lg:-mx-6">
+        <div className="py-2 align-middle inline-block min-w-full sm:px-4 lg:px-6">
           <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Client
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Branch
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Service
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Charges
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Pickup Location
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Delivery Location
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Pickup Date
                   </th>
-                  <th scope="col" className="relative px-6 py-3">
+                  <th scope="col" className="relative px-3 py-2">
                     <span className="sr-only">Action</span>
                   </th>
                 </tr>
@@ -69,13 +69,13 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-3 py-2 text-center text-xs text-gray-500">
                       No requests found
                     </td>
                   </tr>
                 ) : (
                   requests.map((request) => (
-                    <TableRow key={request.id}>
+                    <TableRow key={request.id} sx={{ '& td': { padding: '8px 12px', fontSize: '0.75rem' } }}>
                       <TableCell>{request.clientName}</TableCell>
                       <TableCell>{request.branchName}</TableCell>
                       <TableCell>{request.serviceTypeName}</TableCell>
@@ -88,6 +88,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                           size="small"
                           onClick={() => handleRequestClick(request.id)}
                           title="View Details"
+                          sx={{ padding: '4px', '& svg': { fontSize: '0.875rem' } }}
                         >
                           <Visibility />
                         </IconButton>

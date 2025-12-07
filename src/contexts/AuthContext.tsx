@@ -11,6 +11,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  isLoading: boolean;
   login: (token: string, userData: User) => void;
   logout: () => void;
 }
@@ -18,10 +19,53 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize auth state from localStorage on mount
+  useEffect(() => {
+    const initializeAuth = () => {
+      try {
+        // Set flag to indicate we're initializing (prevents API interceptor from clearing auth)
+        sessionStorage.setItem('auth_initializing', 'true');
+        
+        const savedUser = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        
+        if (savedUser && token) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            // Restore user state immediately
+            setUser(parsedUser);
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+          }
+        } else {
+          // No saved auth, clear any stale data
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      } catch (error) {
+        console.error('Error initializing auth from localStorage:', error);
+        // Clear corrupted data
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      } finally {
+        // Mark loading as complete
+        setIsLoading(false);
+        // Clear initialization flag after a delay to allow components to mount
+        // This gives time for ProtectedRoute and other components to check auth state
+        // and for any initial API calls to complete
+        setTimeout(() => {
+          sessionStorage.removeItem('auth_initializing');
+        }, 1000);
+      }
+    };
+
+    initializeAuth();
+  }, []);
 
   const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
@@ -36,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

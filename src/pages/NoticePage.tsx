@@ -203,28 +203,33 @@ const NoticePage: React.FC = () => {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Notice Board</h1>
-              <p className="text-gray-600 mt-2">Manage and communicate important announcements to your team</p>
+              <h1 className="text-lg font-semibold text-gray-900">Notice Board</h1>
+              <p className="text-xs text-gray-500 mt-1">Manage and communicate important announcements</p>
             </div>
             <div className="flex gap-3">
               <Button
                 variant="outlined"
+                size="small"
                 startIcon={<Filter />}
                 onClick={() => setShowFilters(!showFilters)}
+                sx={{ fontSize: '0.75rem', minWidth: 'auto', padding: '4px 12px' }}
               >
                 {showFilters ? 'Hide' : 'Show'} Filters
               </Button>
               <Button
                 variant="outlined"
+                size="small"
                 startIcon={<Refresh />}
                 onClick={fetchNotices}
                 disabled={isLoading}
+                sx={{ fontSize: '0.75rem', minWidth: 'auto', padding: '4px 12px' }}
               >
                 Refresh
               </Button>
               <Button
                 variant="contained"
                 color="primary"
+                size="small"
                 startIcon={<Add />}
                 onClick={() => {
                   setIsModalOpen(true);
@@ -235,6 +240,7 @@ const NoticePage: React.FC = () => {
                     content: ''
                   });
                 }}
+                sx={{ fontSize: '0.75rem', minWidth: 'auto', padding: '4px 12px' }}
               >
                 Add Notice
               </Button>
@@ -250,38 +256,38 @@ const NoticePage: React.FC = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-            <Card className="bg-white shadow-sm border p-6 border-l-4 border-l-blue-500">
+            <Card className="bg-white shadow-sm border p-3 border-l-4 border-l-blue-500">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Notices</p>
-                  <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
+                  <p className="text-xs font-medium text-gray-600">Total Notices</p>
+                  <p className="text-lg font-bold text-blue-600">{stats.total}</p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Announcement className="h-8 w-8 text-blue-600" />
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Announcement className="h-5 w-5 text-blue-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-white shadow-sm border p-6 border-l-4 border-l-green-500">
+            <Card className="bg-white shadow-sm border p-3 border-l-4 border-l-green-500">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active</p>
-                  <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+                  <p className="text-xs font-medium text-gray-600">Active</p>
+                  <p className="text-lg font-bold text-green-600">{stats.active}</p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="p-2 bg-green-100 rounded-full">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-white shadow-sm border p-6 border-l-4 border-l-gray-500">
+            <Card className="bg-white shadow-sm border p-3 border-l-4 border-l-gray-500">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Inactive</p>
-                  <p className="text-3xl font-bold text-gray-600">{stats.inactive}</p>
+                  <p className="text-xs font-medium text-gray-600">Inactive</p>
+                  <p className="text-lg font-bold text-gray-600">{stats.inactive}</p>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <Cancel className="h-8 w-8 text-gray-600" />
+                <div className="p-2 bg-gray-100 rounded-full">
+                  <Cancel className="h-5 w-5 text-gray-600" />
                 </div>
               </div>
             </Card>
@@ -302,22 +308,30 @@ const NoticePage: React.FC = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Search className="text-gray-400" />
+                          <Search className="text-gray-400" style={{ fontSize: '0.875rem' }} />
                         </InputAdornment>
                       )
+                    }}
+                    sx={{
+                      '& .MuiInputBase-input': { fontSize: '0.75rem', padding: '6px 12px' },
+                      '& .MuiInputLabel-root': { fontSize: '0.75rem' }
                     }}
                   />
 
                   <FormControl fullWidth size="small">
-                    <InputLabel>Status</InputLabel>
+                    <InputLabel sx={{ fontSize: '0.75rem' }}>Status</InputLabel>
                     <Select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                       label="Status"
+                      sx={{
+                        fontSize: '0.75rem',
+                        '& .MuiSelect-select': { fontSize: '0.75rem', padding: '6px 12px' }
+                      }}
                     >
-                      <MenuItem value="all">All Status</MenuItem>
-                      <MenuItem value="active">Active</MenuItem>
-                      <MenuItem value="inactive">Inactive</MenuItem>
+                      <MenuItem value="all" sx={{ fontSize: '0.75rem' }}>All Status</MenuItem>
+                      <MenuItem value="active" sx={{ fontSize: '0.75rem' }}>Active</MenuItem>
+                      <MenuItem value="inactive" sx={{ fontSize: '0.75rem' }}>Inactive</MenuItem>
                     </Select>
                   </FormControl>
                 </div>
@@ -327,6 +341,7 @@ const NoticePage: React.FC = () => {
                     variant="outlined"
                     onClick={clearFilters}
                     size="small"
+                    sx={{ fontSize: '0.75rem', minWidth: 'auto', padding: '4px 12px' }}
                   >
                     Clear Filters
                   </Button>
@@ -345,13 +360,13 @@ const NoticePage: React.FC = () => {
                 <button
                   key={key}
                   onClick={() => setViewMode(key as 'cards' | 'table')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     viewMode === key
                       ? 'bg-red-600 text-white shadow-lg transform scale-105'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-red-300'
                   }`}
                 >
-                  <span className="mr-2">{icon}</span>
+                  <span className="mr-1.5">{icon}</span>
                   {label}
                 </button>
               ))}
@@ -367,25 +382,25 @@ const NoticePage: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                       Title
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                       Content
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                       Created
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                       Updated
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-3 py-2 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                       Author
                     </th>
-                    <th scope="col" className="relative px-6 py-3">
+                    <th scope="col" className="relative px-3 py-2">
                       <span className="sr-only">Actions</span>
                     </th>
                   </tr>
@@ -393,11 +408,11 @@ const NoticePage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredNotices.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                      <td colSpan={7} className="px-3 py-6 text-center text-xs text-gray-500">
                         <div className="flex flex-col items-center">
-                          <Announcement className="h-12 w-12 text-gray-400 mb-4" />
-                          <p className="text-lg font-medium text-gray-900 mb-2">No notices found</p>
-                          <p className="text-gray-600">
+                          <Announcement className="h-8 w-8 text-gray-400 mb-2" />
+                          <p className="text-sm font-medium text-gray-900 mb-1">No notices found</p>
+                          <p className="text-xs text-gray-500">
                             {searchTerm || statusFilter !== 'all'
                               ? 'Try adjusting your filters or search terms.'
                               : 'Get started by creating your first notice.'}
@@ -408,40 +423,42 @@ const NoticePage: React.FC = () => {
                   ) : (
                     filteredNotices.map((notice) => (
                       <tr key={notice.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{notice.title}</div>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="text-xs font-medium text-gray-900">{notice.title}</div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                        <td className="px-3 py-2">
+                          <div className="text-xs text-gray-500 max-w-xs truncate">
                             {notice.content}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           <Chip
                             label={notice.status === 1 ? 'Active' : 'Inactive'}
                             color={notice.status === 1 ? 'success' : 'default'}
                             size="small"
                             variant="outlined"
+                            sx={{ fontSize: '0.7rem', height: '20px' }}
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
                           {formatDate(notice.created_at)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
                           {notice.updated_at !== notice.created_at ? formatDate(notice.updated_at) : '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
                           {notice.created_by_name || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center space-x-2">
+                        <td className="px-3 py-2 whitespace-nowrap text-right">
+                          <div className="flex items-center space-x-1">
                             <Tooltip title="Edit Notice">
                               <IconButton
                                 size="small"
                                 onClick={() => handleEdit(notice)}
                                 className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                sx={{ padding: '4px' }}
                               >
-                                <Edit className="h-5 w-5" />
+                                <Edit className="h-4 w-4" />
                               </IconButton>
                             </Tooltip>
 
@@ -454,8 +471,9 @@ const NoticePage: React.FC = () => {
                                     ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50'
                                     : 'text-green-600 hover:text-green-800 hover:bg-green-50'
                                 }`}
+                                sx={{ padding: '4px' }}
                               >
-                                <Visibility className="h-5 w-5" />
+                                <Visibility className="h-4 w-4" />
                               </IconButton>
                             </Tooltip>
 
@@ -464,8 +482,9 @@ const NoticePage: React.FC = () => {
                                 size="small"
                                 onClick={() => handleDelete(notice.id)}
                                 className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                sx={{ padding: '4px' }}
                               >
-                                <Delete className="h-5 w-5" />
+                                <Delete className="h-4 w-4" />
                               </IconButton>
                             </Tooltip>
                           </div>
@@ -482,12 +501,12 @@ const NoticePage: React.FC = () => {
           <div className="space-y-4">
             {filteredNotices.length === 0 ? (
               <Card className="bg-white shadow-sm">
-                <CardContent className="p-12 text-center">
-                  <Announcement className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                <CardContent className="p-6 text-center">
+                  <Announcement className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.875rem', fontWeight: 500 }} gutterBottom>
                     No notices found
                   </Typography>
-                  <Typography variant="body2" color="textSecondary">
+                  <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.75rem' }}>
                     {searchTerm || statusFilter !== 'all'
                       ? 'Try adjusting your filters or search terms.'
                       : 'Get started by creating your first notice.'}
@@ -502,12 +521,12 @@ const NoticePage: React.FC = () => {
                     notice.status === 1 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-gray-300'
                   }`}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                  <CardContent className="p-3">
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
                       {/* Left Section - Notice Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <Typography variant="h6" className="font-semibold text-gray-900">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Typography variant="body1" sx={{ fontSize: '0.875rem', fontWeight: 600 }} className="text-gray-900">
                             {notice.title}
                           </Typography>
                           <Chip
@@ -515,31 +534,33 @@ const NoticePage: React.FC = () => {
                             color={notice.status === 1 ? 'success' : 'default'}
                             size="small"
                             variant="outlined"
+                            sx={{ fontSize: '0.7rem', height: '20px' }}
                           />
                         </div>
 
                         <Typography 
                           variant="body2" 
                           color="textSecondary" 
-                          className="mb-4 line-clamp-3"
+                          className="mb-2 line-clamp-2"
+                          sx={{ fontSize: '0.75rem' }}
                         >
                           {notice.content}
                         </Typography>
 
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                           <div className="flex items-center space-x-1">
-                            <Schedule className="h-4 w-4" />
+                            <Schedule className="h-3 w-3" />
                             <span>Created: {formatDate(notice.created_at)}</span>
                           </div>
                           {notice.updated_at !== notice.created_at && (
                             <div className="flex items-center space-x-1">
-                              <Schedule className="h-4 w-4" />
+                              <Schedule className="h-3 w-3" />
                               <span>Updated: {formatDate(notice.updated_at)}</span>
                             </div>
                           )}
                           {notice.created_by_name && (
                             <div className="flex items-center space-x-1">
-                              <Person className="h-4 w-4" />
+                              <Person className="h-3 w-3" />
                               <span>By: {notice.created_by_name}</span>
                             </div>
                           )}
@@ -547,14 +568,15 @@ const NoticePage: React.FC = () => {
                       </div>
 
                       {/* Right Section - Actions */}
-                      <div className="flex items-center space-x-2 flex-shrink-0">
+                      <div className="flex items-center space-x-1 flex-shrink-0">
                         <Tooltip title="Edit Notice">
                           <IconButton
                             size="small"
                             onClick={() => handleEdit(notice)}
                             className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            sx={{ padding: '4px' }}
                           >
-                            <Edit className="h-5 w-5" />
+                            <Edit className="h-4 w-4" />
                           </IconButton>
                         </Tooltip>
 
@@ -567,8 +589,9 @@ const NoticePage: React.FC = () => {
                                 ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50'
                                 : 'text-green-600 hover:text-green-800 hover:bg-green-50'
                             }`}
+                            sx={{ padding: '4px' }}
                           >
-                            <Visibility className="h-5 w-5" />
+                            <Visibility className="h-4 w-4" />
                           </IconButton>
                         </Tooltip>
 
@@ -577,8 +600,9 @@ const NoticePage: React.FC = () => {
                             size="small"
                             onClick={() => handleDelete(notice.id)}
                             className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            sx={{ padding: '4px' }}
                           >
-                            <Delete className="h-5 w-5" />
+                            <Delete className="h-4 w-4" />
                           </IconButton>
                         </Tooltip>
                       </div>
@@ -598,9 +622,9 @@ const NoticePage: React.FC = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
+        <DialogTitle sx={{ fontSize: '0.875rem', fontWeight: 600, padding: '12px 16px' }}>
           <div className="flex items-center space-x-2">
-            <Announcement className="h-6 w-6 text-blue-600" />
+            <Announcement className="h-4 w-4 text-blue-600" />
             <span>{isEditMode ? 'Edit Notice' : 'Add New Notice'}</span>
           </div>
         </DialogTitle>
@@ -615,6 +639,11 @@ const NoticePage: React.FC = () => {
               onChange={handleInputChange}
               placeholder="Enter notice title..."
               variant="outlined"
+              size="small"
+              sx={{
+                '& .MuiInputBase-input': { fontSize: '0.75rem' },
+                '& .MuiInputLabel-root': { fontSize: '0.75rem' }
+              }}
             />
             <TextField
               label="Content"
@@ -622,17 +651,23 @@ const NoticePage: React.FC = () => {
               required
               fullWidth
               multiline
-              rows={6}
+              rows={4}
               value={newNotice.content}
               onChange={handleInputChange}
               placeholder="Enter notice content..."
               variant="outlined"
+              size="small"
+              sx={{
+                '& .MuiInputBase-input': { fontSize: '0.75rem' },
+                '& .MuiInputLabel-root': { fontSize: '0.75rem' }
+              }}
             />
           </form>
         </DialogContent>
-        <DialogActions className="p-4">
+        <DialogActions sx={{ padding: '8px 16px' }}>
           <Button
             variant="outlined"
+            size="small"
             onClick={() => {
               setIsModalOpen(false);
               setIsEditMode(false);
@@ -642,6 +677,7 @@ const NoticePage: React.FC = () => {
                 content: ''
               });
             }}
+            sx={{ fontSize: '0.75rem', minWidth: 'auto', padding: '4px 12px' }}
           >
             Cancel
           </Button>
@@ -649,8 +685,10 @@ const NoticePage: React.FC = () => {
             type="submit"
             variant="contained"
             color="primary"
+            size="small"
             onClick={handleSubmit}
             disabled={!newNotice.title.trim() || !newNotice.content.trim()}
+            sx={{ fontSize: '0.75rem', minWidth: 'auto', padding: '4px 12px' }}
           >
             {isEditMode ? 'Update Notice' : 'Add Notice'}
           </Button>

@@ -8,7 +8,7 @@ export interface SosData {
   created_at: string;
   staff_id: number;
   guard_name: string;
-  status: 'pending' | 'in_progress' | 'resolved';
+  status: 'pending' | 'in_progress' | 'resolved' | 'active';
   comment?: string;
 }
 

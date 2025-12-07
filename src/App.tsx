@@ -23,6 +23,8 @@ import InTransitRequests from './pages/InTransitRequests';
 import AddClientPage from './pages/AddClientPage';
 import ClientBranchesPage from './pages/ClientBranchesPage';
 import DailyRuns from './pages/DailyRuns';
+import DoneRequestsPage from './pages/DoneRequestsPage';
+import DoneDetailsPage from './pages/DoneDetailsPage';
 import DateRequestsPage from './pages/DateRequestsPage';
 import { SosProvider } from './contexts/SosContext';
 
@@ -57,7 +59,19 @@ const DevCacheHelper = () => {
 
 // Protected route wrapper
 const ProtectedRoute = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  // Wait for auth state to initialize before checking
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -68,7 +82,19 @@ const ProtectedRoute = () => {
 
 // Redirect authenticated users away from login
 const LoginRoute = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Wait for auth state to initialize before checking
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -107,6 +133,8 @@ const App = () => {
             <Route path="/dashboard/sos-list" element={<SosList/>} />
             <Route path="/dashboard/notices" element={<NoticePage/>} />
             <Route path="/dashboard/daily" element={<DailyRuns/>} />
+            <Route path="/dashboard/done-requests" element={<DoneRequestsPage/>} />
+            <Route path="/dashboard/done-details/:date" element={<DoneDetailsPage/>} />
             <Route path="/dashboard/teams-list" element={<TeamsList/>} />
             <Route path="/dashboard/vehicle-management" element={<VehicleManagement/>} />
             <Route path="/dashboard/clients-list" element={<ClientsList/>} />

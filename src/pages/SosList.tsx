@@ -1,44 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { SosData, sosService } from '../services/sosService';
 import { 
-  Chip, 
-  IconButton, 
-  Select, 
-  MenuItem, 
-  FormControl, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  Button, 
-  TextField, 
-  Box,
-  InputLabel,
-  Card,
-  CardContent,
-  Typography,
-  Badge,
-  Tooltip,
-  Alert,
-  Skeleton
-} from '@mui/material';
-import { 
   MapPin, 
   AlertTriangle, 
   Clock, 
   CheckCircle, 
-  Filter,
   Search,
   RefreshCw,
-  Calendar,
-  User,
-  MessageSquare
+  X
 } from 'lucide-react';
 import LocationModal from '../components/Requests/LocationModal';
 import { useSos } from '../contexts/SosContext';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const SosListPage: React.FC = () => {
   const { sosList, isLoading, hasActiveSos, refreshSosList } = useSos();
@@ -47,11 +19,10 @@ const SosListPage: React.FC = () => {
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: number; status: SosData['status'] } | null>(null);
-  const [statusFilter, setStatusFilter] = useState<SosData['status'] | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<SosData['status'] | 'all' | 'active'>('active');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
   const handleViewLocation = (sos: SosData) => {
     setSelectedSos(sos);
@@ -83,24 +54,34 @@ const SosListPage: React.FC = () => {
     setPendingStatusUpdate(null);
   };
 
-  const handleDateChange = (setter: React.Dispatch<React.SetStateAction<Date | null>>) => (date: Date | null) => {
-    setter(date);
-  };
 
-  const clearFilters = () => {
-    setStatusFilter('all');
-    setStartDate(null);
-    setEndDate(null);
-    setSearchTerm('');
-  };
 
   const filteredSosList = useMemo(() => {
     return sosList.filter(sos => {
       const sosDate = new Date(sos.created_at);
-      const matchesStatus = statusFilter === 'all' ? true : sos.status === statusFilter;
       
-      const matchesDateRange = (!startDate || sosDate >= startDate) && 
-                              (!endDate || sosDate <= new Date(endDate.setHours(23, 59, 59, 999)));
+      // Status matching - 'active' means status === 'active' in database
+      let matchesStatus = false;
+      if (statusFilter === 'all') {
+        matchesStatus = true;
+      } else if (statusFilter === 'active') {
+        matchesStatus = (sos.status as string) === 'active';
+      } else {
+        matchesStatus = sos.status === statusFilter;
+      }
+      
+      // Date range matching - fix mutation issue
+      let matchesDateRange = true;
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        matchesDateRange = matchesDateRange && sosDate >= start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        matchesDateRange = matchesDateRange && sosDate <= end;
+      }
       
       const matchesSearch = !searchTerm || 
                            sos.guard_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,31 +95,16 @@ const SosListPage: React.FC = () => {
   const getStatusIcon = (status: SosData['status']) => {
     switch (status) {
       case 'pending':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case 'in_progress':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-yellow-500" />;
       case 'resolved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'active':
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       default:
-        return <AlertTriangle className="h-5 w-5 text-gray-500" />;
+        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
-  };
-
-  const getStatusColor = (status: SosData['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'error';
-      case 'in_progress':
-        return 'warning';
-      case 'resolved':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
-
-  const getSosTypeColor = (sosType: string) => {
-    return sosType === 'emergency' ? 'error' : 'warning';
   };
 
   const stats = useMemo(() => {
@@ -151,313 +117,164 @@ const SosListPage: React.FC = () => {
   }, [sosList]);
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-6">
-      {/* Header Section */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div className="px-4 py-3">
+      {/* Header */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">SOS Alerts</h1>
-            <p className="text-gray-600 mt-2">Monitor and manage security alerts in real-time</p>
+            <h1 className="text-lg font-semibold text-gray-900">SOS Alerts</h1>
+            <p className="text-xs text-gray-500 mt-0.5">{filteredSosList.length} alert{filteredSosList.length !== 1 ? 's' : ''}</p>
           </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outlined"
-              startIcon={<RefreshCw className="h-4 w-4" />}
-              onClick={refreshSosList}
-              disabled={isLoading}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Filter className="h-4 w-4" />}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </Button>
-          </div>
+          <button
+            onClick={refreshSosList}
+            disabled={isLoading}
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            title="Refresh"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
-        {/* Active SOS Alert */}
+        {/* Active Alert Banner */}
         {hasActiveSos && (
-          <Alert severity="error" className="mb-6">
-            <AlertTriangle className="h-5 w-5" />
-            <strong>Active SOS Alert!</strong> There are {stats.pending} active SOS alerts requiring immediate attention.
-          </Alert>
+          <div className="bg-red-500 text-white px-3 py-2 rounded-lg mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+            <span className="text-xs font-medium">{stats.pending} active alert{stats.pending !== 1 ? 's' : ''} requiring attention</span>
+          </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-white shadow-sm border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography color="textSecondary" gutterBottom variant="body2">
-                    Total Alerts
-                  </Typography>
-                  <Typography variant="h4" className="font-bold text-blue-600">
-                    {stats.total}
-                  </Typography>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border-l-4 border-l-red-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography color="textSecondary" gutterBottom variant="body2">
-                    Pending
-                  </Typography>
-                  <Typography variant="h4" className="font-bold text-red-600">
-                    {stats.pending}
-                  </Typography>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border-l-4 border-l-yellow-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography color="textSecondary" gutterBottom variant="body2">
-                    In Progress
-                  </Typography>
-                  <Typography variant="h4" className="font-bold text-yellow-600">
-                    {stats.inProgress}
-                  </Typography>
-                </div>
-                <Clock className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-sm border-l-4 border-l-green-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Typography color="textSecondary" gutterBottom variant="body2">
-                    Resolved
-                  </Typography>
-                  <Typography variant="h4" className="font-bold text-green-600">
-                    {stats.resolved}
-                  </Typography>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Filters */}
+        <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as SosData['status'] | 'all' | 'active')}
+              className="px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <input
+              type="date"
+              value={startDate ? startDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
+              className="px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <input
+              type="date"
+              value={endDate ? endDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+              className="px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
         </div>
-
-        {/* Filters Section */}
-        {showFilters && (
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Search */}
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Search"
-                  placeholder="Search by guard name, type, or status..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: <Search className="h-4 w-4 text-gray-400 mr-2" />
-                  }}
-                />
-
-                {/* Status Filter */}
-                <FormControl fullWidth size="small">
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as SosData['status'] | 'all')}
-                    label="Status"
-                  >
-                    <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="in_progress">In Progress</MenuItem>
-                    <MenuItem value="resolved">Resolved</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Date Range */}
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="Start Date"
-                    value={startDate}
-                    onChange={handleDateChange(setStartDate)}
-                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                  />
-                </LocalizationProvider>
-
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="End Date"
-                    value={endDate}
-                    onChange={handleDateChange(setEndDate)}
-                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                  />
-                </LocalizationProvider>
-              </div>
-
-              <div className="flex justify-end mt-4">
-                <Button
-                  variant="outlined"
-                  onClick={clearFilters}
-                  size="small"
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* SOS List */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {isLoading ? (
-          // Loading skeletons
           Array.from({ length: 3 }).map((_, index) => (
-            <Card key={index} className="bg-white shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Skeleton variant="circular" width={40} height={40} />
-                    <div>
-                      <Skeleton variant="text" width={120} height={24} />
-                      <Skeleton variant="text" width={80} height={16} />
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <Skeleton variant="text" width={100} height={32} />
-                    <Skeleton variant="text" width={80} height={32} />
-                  </div>
+            <div key={index} className="bg-white rounded-lg border border-gray-200 p-3 animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-gray-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 bg-gray-200 rounded" />
+                  <div className="h-2.5 w-24 bg-gray-200 rounded" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))
         ) : filteredSosList.length === 0 ? (
-          // Empty state
-          <Card className="bg-white shadow-sm">
-            <CardContent className="p-12 text-center">
-              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                No SOS alerts found
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {searchTerm || statusFilter !== 'all' || startDate || endDate
-                  ? 'Try adjusting your filters or search terms.'
-                  : 'All clear! No active security alerts at the moment.'}
-              </Typography>
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <AlertTriangle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-xs text-gray-500">
+              {searchTerm || statusFilter !== 'all' || startDate || endDate
+                ? 'No alerts match your filters'
+                : 'No active alerts'}
+            </p>
+          </div>
         ) : (
-          // SOS Alert Cards
           filteredSosList.map((sos) => (
-            <Card 
+            <div 
               key={sos.id} 
-              className={`bg-white shadow-sm transition-all duration-200 hover:shadow-md ${
-                sos.status === 'pending' ? 'border-l-4 border-l-red-500' : ''
-              }`}
+              className="bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 transition-colors"
             >
-              <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  {/* Left Section - Alert Info */}
-                  <div className="flex items-start space-x-4 flex-1">
-                    <div className="flex-shrink-0">
-                      <Badge
-                        badgeContent={sos.status === 'pending' ? '!' : ''}
-                        color="error"
-                        invisible={sos.status !== 'pending'}
-                      >
-                        <div className={`p-2 rounded-full ${
-                          sos.status === 'pending' ? 'bg-red-100' : 
-                          sos.status === 'in_progress' ? 'bg-yellow-100' : 'bg-green-100'
-                        }`}>
-                          {getStatusIcon(sos.status)}
-                        </div>
-                      </Badge>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <Chip
-                          label={sos.sos_type}
-                          color={getSosTypeColor(sos.sos_type) as any}
-                          size="small"
-                          variant="outlined"
-                        />
-                        <Chip
-                          label={sos.status.replace('_', ' ')}
-                          color={getStatusColor(sos.status) as any}
-                          size="small"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <Typography variant="body1" className="font-medium">
-                            {sos.guard_name}
-                          </Typography>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <Typography variant="body2" color="textSecondary">
-                            {new Date(sos.created_at).toLocaleString()}
-                          </Typography>
-                        </div>
-
-                        {sos.comment && (
-                          <div className="flex items-start space-x-2">
-                            <MessageSquare className="h-4 w-4 text-gray-400 mt-0.5" />
-                            <Typography variant="body2" color="textSecondary" className="line-clamp-2">
-                              {sos.comment}
-                            </Typography>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+                    sos.status === 'pending' || sos.status === 'active' 
+                      ? 'bg-red-50' 
+                      : sos.status === 'in_progress'
+                      ? 'bg-yellow-50'
+                      : 'bg-green-50'
+                  }`}>
+                    {getStatusIcon(sos.status)}
                   </div>
-
-                  {/* Right Section - Actions */}
-                  <div className="flex items-center space-x-3 flex-shrink-0">
-                    {/* Status Update */}
-                    <FormControl size="small" variant="outlined">
-                      <Select
-                        value={sos.status}
-                        onChange={(e) => handleStatusChange(sos.id, e.target.value as SosData['status'])}
-                        size="small"
-                        sx={{ minWidth: 140 }}
-                      >
-                        <MenuItem value="pending">Pending</MenuItem>
-                        <MenuItem value="in_progress">In Progress</MenuItem>
-                        <MenuItem value="resolved">Resolved</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    {/* Location Button */}
-                    <Tooltip title="View Location">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewLocation(sos)}
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                      >
-                        <MapPin className="h-5 w-5" />
-                      </IconButton>
-                    </Tooltip>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className="text-xs font-medium text-gray-900">{sos.guard_name}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        sos.status === 'pending' || sos.status === 'active'
+                          ? 'bg-red-100 text-red-700'
+                          : sos.status === 'in_progress'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {sos.status.replace('_', ' ')}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        sos.sos_type === 'emergency' 
+                          ? 'bg-red-100 text-red-700' 
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {sos.sos_type}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>{new Date(sos.created_at).toLocaleDateString()} {new Date(sos.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    
+                    {sos.comment && (
+                      <p className="text-xs text-gray-600 mt-1.5 line-clamp-1">{sos.comment}</p>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <select
+                    value={sos.status}
+                    onChange={(e) => handleStatusChange(sos.id, e.target.value as SosData['status'])}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                  <button
+                    onClick={() => handleViewLocation(sos)}
+                    className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                    title="View Location"
+                  >
+                    <MapPin className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           ))
         )}
       </div>
@@ -477,37 +294,49 @@ const SosListPage: React.FC = () => {
       )}
 
       {/* Comment Dialog */}
-      <Dialog open={isCommentDialogOpen} onClose={handleCommentCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Update SOS Status</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="textSecondary" className="mb-4">
-            Please provide a comment for the status update to {pendingStatusUpdate?.status}.
-          </Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Comment"
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Enter details about the status update..."
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCommentCancel}>Cancel</Button>
-          <Button 
-            onClick={handleCommentSubmit} 
-            variant="contained" 
-            color="primary"
-            disabled={!comment.trim()}
-          >
-            Update Status
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {isCommentDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Update Status</h3>
+              <button
+                onClick={handleCommentCancel}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-4 py-4">
+              <p className="text-xs text-gray-600 mb-3">
+                Add a comment for status: <span className="font-medium">{pendingStatusUpdate?.status}</span>
+              </p>
+              <textarea
+                autoFocus
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Enter comment..."
+                rows={3}
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              />
+            </div>
+            <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+              <button
+                onClick={handleCommentCancel}
+                className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCommentSubmit}
+                disabled={!comment.trim()}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

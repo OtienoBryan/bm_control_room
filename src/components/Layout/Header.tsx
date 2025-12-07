@@ -10,16 +10,16 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
   const { user, logout } = useAuth();
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+    <div className="relative z-10 flex-shrink-0 flex h-8 bg-white shadow">
       <button
         type="button"
-        className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500 md:hidden"
+        className="px-2 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500 md:hidden"
         onClick={() => setSidebarOpen(true)}
       >
         <span className="sr-only">Open sidebar</span>
-        <MenuIcon className="h-6 w-6" aria-hidden="true" />
+        <MenuIcon className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
-      <div className="flex-1 px-4 flex justify-between">
+      <div className="flex-1 px-2 flex justify-between">
         <div className="flex-1 flex">
           <div className="w-full flex md:ml-0">
             <label htmlFor="search-field" className="sr-only">
@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
             </div> */}
           </div>
         </div>
-        <div className="ml-4 flex items-center md:ml-6">
+        <div className="ml-2 flex items-center md:ml-3">
           {/* <button
             type="button"
             className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -48,10 +48,10 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
             <BellIcon className="h-6 w-6" aria-hidden="true" />
           </button> */}
           {/* Profile dropdown */}
-          <div className="ml-3 relative">
+          <div className="ml-1 relative">
             <div className="flex items-center">
-              <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">
+              <div className="ml-1">
+                <div className="text-[11px] font-medium text-gray-800">
                   {user?.username}
                 </div>
                 {/* <div className="text-sm font-medium text-gray-500">
@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
               <button
                 type="button"
                 onClick={logout}
-                className="ml-3 text-sm font-medium text-red-600 hover:text-red-800 mx-4"
+                className="ml-1.5 text-[11px] font-medium text-red-600 hover:text-red-800 mx-1.5"
               >
                 Logout
               </button>

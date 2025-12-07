@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronRightIcon } from 'lucide-react';
 import { RequestData } from '../../services/requestService';
-import { TableCell, TableRow, Chip, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, Button } from '@mui/material';
+import { TableCell, TableRow, IconButton, TextField, MenuItem, Select, FormControl, InputLabel, Button } from '@mui/material';
 import { Visibility, Download } from '@mui/icons-material';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -13,12 +11,13 @@ interface RequestsTableProps {
 }
 
 const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick }) => {
-  const navigate = useNavigate();
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const handleRequestClick = (requestId: number) => {
@@ -106,42 +105,40 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
     });
   }, [requests, startDate, endDate, selectedClient, selectedBranch]);
 
+  // Pagination calculations for filtered requests
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [startDate, endDate, selectedClient, selectedBranch, itemsPerPage]);
+
   // Calculate total price for filtered requests
   const totalPrice = filteredRequests.reduce((sum, request) => {
     const price = Number(request.price) || 0;
     return sum + price;
   }, 0);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="flex flex-col">
-      <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+      <div className="-my-2 overflow-x-auto sm:-mx-4 lg:-mx-6">
+        <div className="py-2 align-middle inline-block min-w-full sm:px-4 lg:px-6">
           <div ref={tableRef} className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-            <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
-              <div className="flex flex-col gap-4">
+            <div className="px-3 py-3 border-b border-gray-200 sm:px-4">
+              <div className="flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <h3 className="text-xs leading-4 font-medium text-gray-900">
                       Total: KES. {totalPrice.toFixed(2)}
                     </h3>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    <h3 className="text-xs leading-4 font-medium text-gray-900">
                       Total Runs: {filteredRequests.length}
                     </h3>
                   </div>
-                  <div className="mt-4 sm:mt-0">
+                  <div className="mt-2 sm:mt-0">
                     <Button
                       variant="contained"
                       color="primary"
@@ -150,59 +147,99 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                       disabled={isExporting || filteredRequests.length === 0}
                       sx={{
                         backgroundColor: '#dc2626',
+                        fontSize: '0.75rem',
+                        padding: '4px 12px',
                         '&:hover': {
                           backgroundColor: '#b91c1c',
                         },
+                        '& .MuiButton-startIcon': {
+                          marginRight: '4px',
+                          '& svg': {
+                            fontSize: '0.875rem'
+                          }
+                        }
                       }}
                     >
                       {isExporting ? 'Exporting...' : 'Export to PDF'}
                     </Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   <TextField
                     label="Start Date"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
+                    InputLabelProps={{ shrink: true, style: { fontSize: '0.75rem' } }}
                     size="small"
                     fullWidth
+                    sx={{
+                      '& .MuiInputBase-input': {
+                        fontSize: '0.75rem',
+                        padding: '6px 12px'
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: '0.75rem'
+                      }
+                    }}
                   />
                   <TextField
                     label="End Date"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
+                    InputLabelProps={{ shrink: true, style: { fontSize: '0.75rem' } }}
                     size="small"
                     fullWidth
+                    sx={{
+                      '& .MuiInputBase-input': {
+                        fontSize: '0.75rem',
+                        padding: '6px 12px'
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontSize: '0.75rem'
+                      }
+                    }}
                   />
                   <FormControl size="small" fullWidth>
-                    <InputLabel>Client</InputLabel>
+                    <InputLabel sx={{ fontSize: '0.75rem' }}>Client</InputLabel>
                     <Select
                       value={selectedClient}
                       label="Client"
                       onChange={(e) => setSelectedClient(e.target.value)}
+                      sx={{
+                        fontSize: '0.75rem',
+                        '& .MuiSelect-select': {
+                          padding: '6px 12px',
+                          fontSize: '0.75rem'
+                        }
+                      }}
                     >
-                      <MenuItem value="">All Clients</MenuItem>
+                      <MenuItem value="" sx={{ fontSize: '0.75rem' }}>All Clients</MenuItem>
                       {uniqueClients.map((client) => (
-                        <MenuItem key={client} value={client}>
+                        <MenuItem key={client} value={client} sx={{ fontSize: '0.75rem' }}>
                           {client}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                   <FormControl size="small" fullWidth>
-                    <InputLabel>Branch</InputLabel>
+                    <InputLabel sx={{ fontSize: '0.75rem' }}>Branch</InputLabel>
                     <Select
                       value={selectedBranch}
                       label="Branch"
                       onChange={(e) => setSelectedBranch(e.target.value)}
+                      sx={{
+                        fontSize: '0.75rem',
+                        '& .MuiSelect-select': {
+                          padding: '6px 12px',
+                          fontSize: '0.75rem'
+                        }
+                      }}
                     >
-                      <MenuItem value="">All Branches</MenuItem>
+                      <MenuItem value="" sx={{ fontSize: '0.75rem' }}>All Branches</MenuItem>
                       {uniqueBranches.map((branch) => (
-                        <MenuItem key={branch} value={branch}>
+                        <MenuItem key={branch} value={branch} sx={{ fontSize: '0.75rem' }}>
                           {branch}
                         </MenuItem>
                       ))}
@@ -214,22 +251,22 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Client
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Branch
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Delivery Location
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Charges
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-3 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                     Pickup Date
                   </th>
-                  <th scope="col" className="relative px-6 py-3">
+                  <th scope="col" className="relative px-3 py-2">
                     <span className="sr-only">View</span>
                   </th>
                 </tr>
@@ -237,14 +274,14 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={6} className="px-3 py-2 text-center text-[11px] text-gray-500">
                       No requests found
                     </td>
                   </tr>
                 ) : (
                   <>
-                    {filteredRequests.map((request) => (
-                      <TableRow key={request.id}>
+                    {paginatedRequests.map((request) => (
+                      <TableRow key={request.id} sx={{ '& td': { padding: '6px 12px', fontSize: '0.6875rem' } }}>
                         <TableCell>{request.clientName}</TableCell>
                         <TableCell>{request.branchName}</TableCell>
                         <TableCell>{request.deliveryLocation}</TableCell>
@@ -255,6 +292,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                             size="small"
                             onClick={() => handleRequestClick(request.id)}
                             title="View Details"
+                            sx={{ padding: '3px', '& svg': { fontSize: '0.75rem' } }}
                           >
                             <Visibility />
                           </IconButton>
@@ -265,6 +303,82 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ requests, onRequestClick 
                 )}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {filteredRequests.length > 0 && (
+              <div className="px-3 py-2 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-700">Show</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span className="text-xs text-gray-700">entries</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-700">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredRequests.length)} of {filteredRequests.length} entries
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      // Show first page, last page, current page, and pages around current
+                      if (totalPages <= 7) return true;
+                      if (page === 1 || page === totalPages) return true;
+                      if (Math.abs(page - currentPage) <= 1) return true;
+                      return false;
+                    })
+                    .map((page, index, array) => {
+                      // Add ellipsis if there's a gap
+                      const showEllipsisBefore = index > 0 && array[index - 1] !== page - 1;
+                      return (
+                        <React.Fragment key={page}>
+                          {showEllipsisBefore && (
+                            <span className="px-1 text-xs text-gray-500">...</span>
+                          )}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-2 py-1 text-xs border rounded ${
+                              currentPage === page
+                                ? 'bg-red-600 text-white border-red-600'
+                                : 'border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -140,10 +140,36 @@ api.interceptors.response.use(
       
       switch (status) {
         case 401:
-          console.log('Unauthorized access, clearing token and redirecting to login');
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          // Check if we're in the middle of auth initialization
+          const isInitializing = sessionStorage.getItem('auth_initializing') === 'true';
+          const currentPath = window.location.pathname;
+          const token = localStorage.getItem('token');
+          const user = localStorage.getItem('user');
+          
+          // Don't clear auth during initialization - this prevents redirects on page refresh
+          if (isInitializing) {
+            console.warn('Received 401 during auth initialization, preserving auth state');
+            // Return error but don't clear auth or redirect
+            const authError = new Error('Unauthorized during initialization') as ApiError;
+            authError.status = 401;
+            authError.code = 'auth-init';
+            throw authError;
+          }
+          
+          // Only clear auth if we're not already on the login page and have auth data
+          if (currentPath !== '/login' && !currentPath.startsWith('/login') && token && user) {
+            console.log('Unauthorized access (401), clearing token and redirecting to login');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            // Use a small delay to ensure state updates properly
+            setTimeout(() => {
+              // Only redirect if we're still not on login page and not initializing
+              if (window.location.pathname !== '/login' && 
+                  !sessionStorage.getItem('auth_initializing')) {
+                window.location.href = '/login';
+              }
+            }, 100);
+          }
           break;
         case 403:
         case 404:

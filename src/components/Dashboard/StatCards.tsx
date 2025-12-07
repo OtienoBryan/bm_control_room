@@ -51,13 +51,13 @@ const StatCards: React.FC = () => {
   }, [user?.id]);
 
   return (
-    <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div onClick={() => navigate('/dashboard/unscheduled')} className="cursor-pointer">
         <StatCard 
           position={1} 
           title="Unscheduled" 
           value={isLoading ? '...' : stats.unscheduled} 
-          icon={<BookCheck className="h-6 w-6 text-red-600" aria-hidden="true" />} 
+          icon={<BookCheck className="h-4 w-4 text-red-600" aria-hidden="true" />} 
           change={{
             value: 0,
             positive: true
@@ -69,7 +69,7 @@ const StatCards: React.FC = () => {
           position={2} 
           title="Pending" 
           value={isLoading ? '...' : stats.pending} 
-          icon={<LayoutList className="h-6 w-6 text-red-600" aria-hidden="true" />} 
+          icon={<LayoutList className="h-4 w-4 text-red-600" aria-hidden="true" />} 
           change={{
             value: 0,
             positive: true
@@ -81,7 +81,7 @@ const StatCards: React.FC = () => {
           position={3} 
           title="In Transit" 
           value={isLoading ? '...' : stats.inTransit} 
-          icon={<TrendingUpIcon className="h-6 w-6 text-red-600" aria-hidden="true" />} 
+          icon={<TrendingUpIcon className="h-4 w-4 text-red-600" aria-hidden="true" />} 
           change={{
             value: 0,
             positive: true
@@ -93,7 +93,7 @@ const StatCards: React.FC = () => {
           position={4} 
           title="Completed" 
           value={isLoading ? '...' : stats.completed} 
-          icon={<BadgeCheck className="h-6 w-6 text-red-600" aria-hidden="true" />} 
+          icon={<BadgeCheck className="h-4 w-4 text-red-600" aria-hidden="true" />} 
           change={{
             value: 0,
             positive: true
