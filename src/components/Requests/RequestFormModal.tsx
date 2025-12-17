@@ -241,7 +241,7 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-center justify-center p-2 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -253,17 +253,17 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
                                  {/* Header */}
-                 <div className="bg-gradient-to-r from-red-900 to-blue-800 px-6 py-4">
+                 <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-5 py-3">
                    <div className="flex items-center justify-between">
-                     <div className="flex items-center space-x-3">
-                       <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                         <PackageIcon className="h-6 w-6 text-white" />
+                     <div className="flex items-center space-x-2">
+                       <div className="p-1.5 bg-white bg-opacity-20 rounded-lg">
+                         <PackageIcon className="h-5 w-5 text-white" />
                        </div>
                        <div>
-                         <Dialog.Title className="text-xl font-semibold text-white">
+                         <Dialog.Title className="text-base font-semibold text-white">
                            Create New Service Request
                          </Dialog.Title>
-                         <p className="text-blue-100 text-sm">
+                         <p className="text-blue-100 text-xs">
                            Fill in the details below to create your request
                          </p>
                        </div>
@@ -278,34 +278,34 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-6">
+                <div className="px-5 py-4">
                                      {isLoading ? (
-                     <div className="flex items-center justify-center py-12">
+                     <div className="flex items-center justify-center py-8">
                        <LoaderIcon className="h-8 w-8 text-blue-600 animate-spin" />
-                       <span className="ml-3 text-gray-600">Loading form data...</span>
+                       <span className="ml-2 text-sm text-gray-600">Loading form data...</span>
                      </div>
                    ) : (
                     <>
                       {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                           <div className="flex items-center">
-                            <AlertCircleIcon className="h-5 w-5 text-red-600 mr-2" />
-                            <span className="text-red-800 font-medium">{error}</span>
+                            <AlertCircleIcon className="h-4 w-4 text-red-600 mr-2" />
+                            <span className="text-sm text-red-800 font-medium">{error}</span>
                           </div>
                         </div>
                       )}
 
-                      <form onSubmit={handleSubmit} className="space-y-6">
+                      <form onSubmit={handleSubmit} className="space-y-3">
                                                  {/* Branch Selection */}
-                         <div className="bg-gray-50 p-4 rounded-lg">
-                           <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                             <Building2Icon className="h-4 w-4 mr-2 text-blue-600" />
+                         <div className="bg-gray-50 p-3 rounded-lg">
+                           <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                             <Building2Icon className="h-4 w-4 mr-1.5 text-blue-600" />
                              Select Branch
                            </label>
                           <select
                             value={formData.branchId}
                             onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             required
                           >
                             <option value="">Choose a branch</option>
@@ -319,15 +319,15 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                         </div>
 
                                                  {/* Service Type Selection */}
-                         <div className="bg-gray-50 p-4 rounded-lg">
-                           <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                             <PackageIcon className="h-4 w-4 mr-2 text-blue-600" />
+                         <div className="bg-gray-50 p-3 rounded-lg">
+                           <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                             <PackageIcon className="h-4 w-4 mr-1.5 text-blue-600" />
                              Service Type & Pricing
                            </label>
                           <select
                             value={formData.serviceTypeId}
                             onChange={(e) => setFormData({ ...formData, serviceTypeId: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             required
                             disabled={!formData.branchId}
                           >
@@ -350,12 +350,12 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                           </select>
                           
                                                      {!isAdhoc && selectedServiceCharge && (
-                             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                             <div className="mt-1.5 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                                <div className="flex items-center justify-between">
-                                 <span className="text-sm text-blue-800">
+                                 <span className="text-xs text-blue-800">
                                    Service: <span className="font-semibold">{selectedServiceCharge.service_type_name}</span>
                                  </span>
-                                 <span className="text-lg font-bold text-blue-700">
+                                 <span className="text-base font-bold text-blue-700">
                                    {selectedServiceCharge.price}
                                  </span>
                                </div>
@@ -363,14 +363,14 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                            )}
                            
                            {isAdhoc && formData.serviceTypeId && (
-                             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                             <div className="mt-1.5 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                                <div className="flex items-center justify-between">
-                                 <span className="text-sm text-blue-800">
+                                 <span className="text-xs text-blue-800">
                                    Service: <span className="font-semibold">
                                      {serviceTypes.find(st => st.id.toString() === formData.serviceTypeId)?.name}
                                    </span>
                                  </span>
-                                 <span className="text-lg font-bold text-blue-700">
+                                 <span className="text-base font-bold text-blue-700">
                                    Manual Charge: {formData.manualCharge}
                                  </span>
                                </div>
@@ -380,32 +380,32 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
 
                         {/* Adhoc Fields */}
                         {isAdhoc && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                                <Building2Icon className="h-4 w-4 mr-2 text-blue-600" />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                                <Building2Icon className="h-4 w-4 mr-1.5 text-blue-600" />
                                 Client Name
                               </label>
                               <input
                                 type="text"
                                 value={formData.clientName || ''}
                                 onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 placeholder="Enter client name"
                                 required={isAdhoc}
                               />
                             </div>
 
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                                <PackageIcon className="h-4 w-4 mr-2 text-blue-600" />
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                                <PackageIcon className="h-4 w-4 mr-1.5 text-blue-600" />
                                 Manual Charge
                               </label>
                               <input
                                 type="number"
                                 value={formData.manualCharge || ''}
                                 onChange={(e) => setFormData({ ...formData, manualCharge: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 placeholder="Enter charge amount"
                                 min="0"
                                 step="0.01"
@@ -416,32 +416,32 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                         )}
 
                         {/* Location Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                     <div className="bg-gray-50 p-4 rounded-lg">
-                             <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                               <MapPinIcon className="h-4 w-4 mr-2 text-blue-600" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                     <div className="bg-gray-50 p-3 rounded-lg">
+                             <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                               <MapPinIcon className="h-4 w-4 mr-1.5 text-blue-600" />
                                Pickup Location
                              </label>
                                                          <input
                                type="text"
                                value={formData.pickupLocation}
                                onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
-                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                placeholder="Enter pickup address"
                                required
                              />
                           </div>
 
-                                                     <div className="bg-gray-50 p-4 rounded-lg">
-                             <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                               <MapPinIcon className="h-4 w-4 mr-2 text-blue-600" />
+                                                     <div className="bg-gray-50 p-3 rounded-lg">
+                             <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                               <MapPinIcon className="h-4 w-4 mr-1.5 text-blue-600" />
                                Delivery Location
                              </label>
                                                          <input
                                type="text"
                                value={formData.dropoffLocation}
                                onChange={(e) => setFormData({ ...formData, dropoffLocation: e.target.value })}
-                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                placeholder="Enter delivery address"
                                required
                              />
@@ -449,32 +449,32 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                         </div>
 
                         {/* Date & Time */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                     <div className="bg-gray-50 p-4 rounded-lg">
-                             <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                               <CalendarIcon className="h-4 w-4 mr-2 text-blue-600" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                     <div className="bg-gray-50 p-3 rounded-lg">
+                             <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                               <CalendarIcon className="h-4 w-4 mr-1.5 text-blue-600" />
                                Pickup Date
                              </label>
                                                          <input
                                type="date"
                                value={formData.pickupDate}
                                onChange={(e) => setFormData({ ...formData, pickupDate: e.target.value })}
-                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                min={getMinDate()}
                                required
                              />
                           </div>
 
-                                                     <div className="bg-gray-50 p-4 rounded-lg">
-                             <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                               <ClockIcon className="h-4 w-4 mr-2 text-blue-600" />
+                                                     <div className="bg-gray-50 p-3 rounded-lg">
+                             <label className="flex items-center text-xs font-semibold text-gray-700 mb-1.5">
+                               <ClockIcon className="h-4 w-4 mr-1.5 text-blue-600" />
                                Pickup Time
                              </label>
                                                          <input
                                type="time"
                                value={formData.pickupTime}
                                onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
-                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                required
                              />
                           </div>
@@ -482,12 +482,12 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
 
                         {/* Summary */}
                         {((selectedServiceCharge && !isAdhoc) || (isAdhoc && formData.clientName && formData.manualCharge && formData.serviceTypeId)) && formData.pickupDate && formData.pickupTime && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
-                              <CheckCircleIcon className="h-4 w-4 mr-2" />
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <h4 className="text-sm font-semibold text-blue-900 mb-1.5 flex items-center">
+                              <CheckCircleIcon className="h-4 w-4 mr-1.5" />
                               Request Summary
                             </h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                               <div>
                                 <span className="text-blue-700 font-medium">Service:</span>
                                 <p className="text-blue-900">
@@ -522,27 +522,27 @@ const RequestFormModal: React.FC<RequestFormModalProps> = ({ isOpen, onClose, on
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-200">
                           <button
                             type="button"
                             onClick={handleClose}
-                            className="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium"
+                            className="flex-1 px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium"
                           >
                             Cancel
                           </button>
                           <button
                             type="submit"
                             disabled={isSubmitting || !formData.branchId || !formData.serviceTypeId || (isAdhoc && (!formData.clientName || !formData.manualCharge))}
-                            className="flex-1 px-6 py-3 text-white bg-red-900 hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition-colors font-medium flex items-center justify-center"
+                            className="flex-1 px-4 py-2 text-sm text-white bg-red-900 hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition-colors font-medium flex items-center justify-center"
                           >
                             {isSubmitting ? (
                               <>
-                                <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
+                                <LoaderIcon className="h-4 w-4 mr-1.5 animate-spin" />
                                 Creating Request...
                               </>
                             ) : (
                               <>
-                                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                                <CheckCircleIcon className="h-4 w-4 mr-1.5" />
                                 Create Request
                               </>
                             )}

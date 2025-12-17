@@ -26,6 +26,7 @@ import DailyRuns from './pages/DailyRuns';
 import DoneRequestsPage from './pages/DoneRequestsPage';
 import DoneDetailsPage from './pages/DoneDetailsPage';
 import DateRequestsPage from './pages/DateRequestsPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 import { SosProvider } from './contexts/SosContext';
 
 // Development cache clearing helper
@@ -144,6 +145,7 @@ const App = () => {
             <Route path="/dashboard/clients/add" element={<AddClientPage />} />
             <Route path="/dashboard/clients/:id/branches" element={<ClientBranchesPage />} />
             <Route path="/dashboard/date-requests/:date" element={<DateRequestsPage />} />
+            <Route path="/dashboard/audit-logs" element={<AuditLogsPage />} />
           </Route>
           
           <Route path="/settings" element={

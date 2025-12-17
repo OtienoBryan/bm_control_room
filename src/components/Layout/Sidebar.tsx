@@ -17,7 +17,8 @@ import {
   BellIcon,
   LogOutIcon,
   SettingsIcon,
-  CarIcon
+  CarIcon,
+  FileTextIcon
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -67,7 +68,8 @@ const navigation: NavigationSection[] = [
     items: [
       { name: 'SOS Alerts', href: '/dashboard/sos-list', icon: AlertTriangleIcon, badge: 'Live' },
       { name: 'Runs Reports', href: '/dashboard/done-requests', icon: BarChart3Icon },
-      { name: 'Notices', href: '/dashboard/notices', icon: BellIcon }
+      { name: 'Notices', href: '/dashboard/notices', icon: BellIcon },
+      { name: 'Audit Trail', href: '/dashboard/audit-logs', icon: FileTextIcon }
     ]
   }
 ];

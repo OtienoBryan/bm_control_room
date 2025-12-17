@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (token: string, userData: User) => void;
-  logout: () => void;
+  logout: () => void | Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,10 +73,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Get user info before clearing
+      const currentUser = user || (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
+      
+      // Call logout endpoint to log the action
+      if (currentUser) {
+        try {
+          await api.post('/auth/logout', {
+            userId: currentUser.id,
+            username: currentUser.username
+          });
+        } catch (error) {
+          // Don't block logout if audit logging fails
+          console.error('Error logging logout to server:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Always clear local storage and state
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    }
   };
 
   return (

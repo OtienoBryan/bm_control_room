@@ -92,13 +92,13 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
   const getRoleIcon = (role: string) => {
     switch (role.toLowerCase()) {
       case 'team leader':
-        return <ShieldIcon className="h-4 w-4 text-blue-600" />;
+        return <ShieldIcon className="h-3 w-3 text-blue-600" />;
       case 'driver':
-        return <UserIcon className="h-4 w-4 text-green-600" />;
+        return <UserIcon className="h-3 w-3 text-green-600" />;
       case 'assistant':
-        return <UsersIcon className="h-4 w-4 text-purple-600" />;
+        return <UsersIcon className="h-3 w-3 text-purple-600" />;
       default:
-        return <UserIcon className="h-4 w-4 text-gray-600" />;
+        return <UserIcon className="h-3 w-3 text-gray-600" />;
     }
   };
 
@@ -147,48 +147,48 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-lg bg-white shadow-2xl transition-all">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-red-900 to-blue-800 px-6 py-4">
+                <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-4 py-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                        <UsersIcon className="h-6 w-6 text-white" />
+                    <div className="flex items-center space-x-2">
+                      <div className="p-1.5 bg-white bg-opacity-20 rounded-lg">
+                        <UsersIcon className="h-4 w-4 text-white" />
                       </div>
                       <div>
-                        <Dialog.Title className="text-xl font-semibold text-white">
+                        <Dialog.Title className="text-base font-semibold text-white">
                           Assign Team to Request
                         </Dialog.Title>
-                        <p className="text-blue-100 text-sm">
+                        <p className="text-blue-100 text-xs">
                           Select a team to handle this service request
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={onClose}
-                      className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+                      className="p-1.5 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
                     >
-                      <XIcon className="h-5 w-5" />
+                      <XIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-6">
+                <div className="px-4 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                   {isLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <LoaderIcon className="h-8 w-8 text-blue-600 animate-spin" />
-                      <span className="ml-3 text-gray-600">Loading teams...</span>
+                    <div className="flex items-center justify-center py-8">
+                      <LoaderIcon className="h-6 w-6 text-blue-600 animate-spin" />
+                      <span className="ml-2 text-xs text-gray-600">Loading teams...</span>
                     </div>
                   ) : (
                     <>
                       {/* Request Details */}
-                      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                          <PackageIcon className="h-4 w-4 mr-2 text-blue-600" />
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                        <h4 className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
+                          <PackageIcon className="h-3 w-3 mr-1.5 text-blue-600" />
                           Request Details
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                           <div>
                             <span className="text-gray-600">Service:</span>
                             <p className="font-medium text-gray-900">{request.serviceTypeName}</p>
@@ -205,25 +205,25 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
                       </div>
 
                       {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                           <div className="flex items-center">
-                            <AlertCircleIcon className="h-5 w-5 text-red-600 mr-2" />
-                            <span className="text-red-800 font-medium">{error}</span>
+                            <AlertCircleIcon className="h-4 w-4 text-red-600 mr-2" />
+                            <span className="text-xs text-red-800 font-medium">{error}</span>
                           </div>
                         </div>
                       )}
 
-                      <form onSubmit={handleSubmit} className="space-y-6">
+                      <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Team Selection */}
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
-                            <UsersIcon className="h-4 w-4 mr-2 text-blue-600" />
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <label className="flex items-center text-xs font-semibold text-gray-700 mb-2">
+                            <UsersIcon className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
                             Select Team
                           </label>
                           <select
                             value={selectedTeamId || ''}
                             onChange={(e) => setSelectedTeamId(Number(e.target.value))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             disabled={isLoading}
                           >
                             <option value="">Choose a team</option>
@@ -242,56 +242,56 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
                         {/* Selected Team Details */}
                         {selectedTeam && (
                           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                            <div className="bg-blue-50 px-4 py-3 border-b border-gray-200">
-                              <h4 className="font-semibold text-blue-900 flex items-center">
-                                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                            <div className="bg-blue-50 px-3 py-2 border-b border-gray-200">
+                              <h4 className="text-xs font-semibold text-blue-900 flex items-center">
+                                <CheckCircleIcon className="h-3.5 w-3.5 mr-1.5" />
                                 {selectedTeam.name} - Team Details
                               </h4>
-                              <p className="text-sm text-blue-700 mt-1">
+                              <p className="text-xs text-blue-700 mt-0.5">
                                 {selectedTeam.members.length} team members available
                               </p>
                             </div>
                             
-                            <div className="p-4">
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="p-3">
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {/* Team Members */}
                                 <div>
-                                  <h5 className="font-medium text-gray-900 mb-3 flex items-center">
-                                    <UsersIcon className="h-4 w-4 mr-2 text-blue-600" />
+                                  <h5 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                                    <UsersIcon className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
                                     Team Members
                                   </h5>
-                                  <div className="space-y-3">
+                                  <div className="space-y-2">
                                     {selectedTeam.members.map((member) => (
-                                      <div key={member.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                      <div key={member.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
                                         <div className="flex-shrink-0">
                                           {member.photo_url ? (
                                             <img 
                                               src={member.photo_url} 
                                               alt={member.name}
-                                              className="h-10 w-10 rounded-full object-cover"
+                                              className="h-8 w-8 rounded-full object-cover"
                                             />
                                           ) : (
-                                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                              <UserIcon className="h-5 w-5 text-blue-600" />
+                                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                              <UserIcon className="h-4 w-4 text-blue-600" />
                                             </div>
                                           )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center justify-between">
                                             <div>
-                                              <p className="text-sm font-medium text-gray-900 truncate">
+                                              <p className="text-xs font-medium text-gray-900 truncate">
                                                 {member.name}
                                               </p>
                                               <p className="text-xs text-gray-500">
                                                 {member.empl_no} • {member.position}
                                               </p>
                                             </div>
-                                            <div className="flex flex-col items-end space-y-1">
-                                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(member.role)}`}>
+                                            <div className="flex flex-col items-end space-y-0.5">
+                                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${getRoleColor(member.role)}`}>
                                                 {getRoleIcon(member.role)}
-                                                <span className="ml-1">{member.role}</span>
+                                                <span className="ml-0.5">{member.role}</span>
                                               </span>
-                                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}>
+                                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}>
                                                 {member.status === 1 ? 'Active' : 'Inactive'}
                                               </span>
                                             </div>
@@ -304,40 +304,40 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
 
                                 {/* Team Summary */}
                                 <div>
-                                  <h5 className="font-medium text-gray-900 mb-3 flex items-center">
-                                    <ShieldIcon className="h-4 w-4 mr-2 text-blue-600" />
+                                  <h5 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                                    <ShieldIcon className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
                                     Team Summary
                                   </h5>
-                                  <div className="space-y-3">
-                                    <div className="p-3 bg-blue-50 rounded-lg">
+                                  <div className="space-y-2">
+                                    <div className="p-2 bg-blue-50 rounded-lg">
                                       <div className="flex items-center justify-between">
-                                        <span className="text-sm text-blue-700">Total Members:</span>
-                                        <span className="font-semibold text-blue-900">{selectedTeam.members.length}</span>
+                                        <span className="text-xs text-blue-700">Total Members:</span>
+                                        <span className="text-xs font-semibold text-blue-900">{selectedTeam.members.length}</span>
                                       </div>
                                     </div>
                                     
-                                    <div className="p-3 bg-green-50 rounded-lg">
+                                    <div className="p-2 bg-green-50 rounded-lg">
                                       <div className="flex items-center justify-between">
-                                        <span className="text-sm text-green-700">Active Members:</span>
-                                        <span className="font-semibold text-green-900">
+                                        <span className="text-xs text-green-700">Active Members:</span>
+                                        <span className="text-xs font-semibold text-green-900">
                                           {selectedTeam.members.filter(m => m.status === 1).length}
                                         </span>
                                       </div>
                                     </div>
 
-                                    <div className="p-3 bg-purple-50 rounded-lg">
+                                    <div className="p-2 bg-purple-50 rounded-lg">
                                       <div className="flex items-center justify-between">
-                                        <span className="text-sm text-purple-700">Team Leader:</span>
-                                        <span className="font-semibold text-purple-900">
+                                        <span className="text-xs text-purple-700">Team Leader:</span>
+                                        <span className="text-xs font-semibold text-purple-900">
                                           {selectedTeam.members.find(m => m.role === 'Team Leader')?.name || 'Not assigned'}
                                         </span>
                                       </div>
                                     </div>
 
-                                    <div className="p-3 bg-gray-50 rounded-lg">
+                                    <div className="p-2 bg-gray-50 rounded-lg">
                                       <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-700">Created:</span>
-                                        <span className="font-semibold text-gray-900">
+                                        <span className="text-xs text-gray-700">Created:</span>
+                                        <span className="text-xs font-semibold text-gray-900">
                                           {new Date(selectedTeam.created_at).toLocaleDateString()}
                                         </span>
                                       </div>
@@ -350,27 +350,27 @@ const AssignTeamModal: React.FC<AssignTeamModalProps> = ({
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                        <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-gray-200">
                           <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium"
+                            className="flex-1 px-4 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium"
                           >
                             Cancel
                           </button>
                           <button
                             type="submit"
                             disabled={isSubmitting || !selectedTeamId}
-                            className="flex-1 px-6 py-3 text-white bg-red-900 hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition-colors font-medium flex items-center justify-center"
+                            className="flex-1 px-4 py-2 text-xs text-white bg-red-900 hover:bg-red-700 disabled:bg-gray-400 rounded-lg transition-colors font-medium flex items-center justify-center"
                           >
                             {isSubmitting ? (
                               <>
-                                <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
+                                <LoaderIcon className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                                 Assigning Team...
                               </>
                             ) : (
                               <>
-                                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                                <CheckCircleIcon className="h-3.5 w-3.5 mr-1.5" />
                                 Assign Team
                               </>
                             )}
